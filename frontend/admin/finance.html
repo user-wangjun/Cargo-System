@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>财务管理</title>
+  <link rel="stylesheet" href="./common.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="side">
+      <div class="logo">Cargo Admin</div>
+      <a class="nav-link" href="./index.html">总览仪表盘</a>
+      <a class="nav-link" href="./orders.html">销售管理</a>
+      <a class="nav-link" href="./inventory.html">库存管理</a>
+      <a class="nav-link active" href="./finance.html">财务管理</a>
+      <a class="nav-link" href="./users.html" data-perm-any="user.manage">员工权限</a>
+    </aside>
+    <main class="main">
+      <section class="top">
+        <div><div class="title">财务管理</div><div class="hint">发票、请款、回款一屏查看</div></div>
+        <span id="loginStatus" class="status warn">未登录</span>
+      </section>
+
+      <section class="row">
+        <div class="card col-4"><div class="k">发票数</div><div class="v" id="kpiInv" style="font-size:24px;font-weight:700;">0</div></div>
+        <div class="card col-4"><div class="k">请款数</div><div class="v" id="kpiReq" style="font-size:24px;font-weight:700;">0</div></div>
+        <div class="card col-4"><div class="k">回款数</div><div class="v" id="kpiRec" style="font-size:24px;font-weight:700;">0</div></div>
+      </section>
+
+      <section class="row">
+        <div class="card col-6">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><strong>发票</strong><button onclick="loadPage()">刷新</button></div>
+          <table><thead><tr><th>发票号</th><th>客户</th><th>金额</th><th>状态</th></tr></thead><tbody id="invoiceBody"><tr><td colspan="4">暂无数据</td></tr></tbody></table>
+        </div>
+        <div class="card col-6">
+          <strong>请款单</strong>
+          <table><thead><tr><th>请款号</th><th>发票号</th><th>金额</th><th>状态</th></tr></thead><tbody id="requestBody"><tr><td colspan="4">暂无数据</td></tr></tbody></table>
+        </div>
+      </section>
+
+      <section class="row">
+        <div class="card col-12">
+          <strong>回款记录</strong>
+          <table><thead><tr><th>回款单号</th><th>发票号</th><th>客户</th><th>金额</th><th>日期</th></tr></thead><tbody id="receiptBody"><tr><td colspan="5">暂无数据</td></tr></tbody></table>
+          <div id="log" class="log">等待操作...</div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="./common.js"></script>
+  <script>
+    const log = setupAuthPanel("log");
+
+    async function loadPage() {
+      try {
+        const [i, p, r] = await Promise.all([
+          request("/invoices"),
+          request("/payment-requests"),
+          request("/receipts")
+        ]);
+        const invoices = i.data || [];
+        const requests = p.data || [];
+        const receipts = r.data || [];
+
+        document.getElementById("kpiInv").textContent = String(invoices.length);
+        document.getElementById("kpiReq").textContent = String(requests.length);
+        document.getElementById("kpiRec").textContent = String(receipts.length);
+
+        document.getElementById("invoiceBody").innerHTML = invoices.length
+          ? invoices.slice(0, 20).map(x => `<tr><td>${x.invoiceNo||"-"}</td><td>${x.customerName||"-"}</td><td>${x.totalAmount||0}</td><td>${x.status||"-"}</td></tr>`).join("")
+          : "<tr><td colspan='4'>暂无数据</td></tr>";
+
+        document.getElementById("requestBody").innerHTML = requests.length
+          ? requests.slice(0, 20).map(x => `<tr><td>${x.requestNo||"-"}</td><td>${x.invoiceNo||"-"}</td><td>${x.requestedAmount||0}</td><td>${x.status||"-"}</td></tr>`).join("")
+          : "<tr><td colspan='4'>暂无数据</td></tr>";
+
+        document.getElementById("receiptBody").innerHTML = receipts.length
+          ? receipts.slice(0, 20).map(x => `<tr><td>${x.receiptNo||"-"}</td><td>${x.invoiceNo||"-"}</td><td>${x.customerName||"-"}</td><td>${x.amount||0}</td><td>${(x.receivedDate||"").slice(0,10)}</td></tr>`).join("")
+          : "<tr><td colspan='5'>暂无数据</td></tr>";
+
+        log("财务页面刷新成功。");
+      } catch (err) {
+        log("刷新失败: " + safeMsg(err));
+      }
+    }
+  </script>
+</body>
+</html>

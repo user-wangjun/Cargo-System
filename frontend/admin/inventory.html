@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>库存管理</title>
+  <link rel="stylesheet" href="./common.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="side">
+      <div class="logo">Cargo Admin</div>
+      <a class="nav-link" href="./index.html">总览仪表盘</a>
+      <a class="nav-link" href="./orders.html">销售管理</a>
+      <a class="nav-link active" href="./inventory.html">库存管理</a>
+      <a class="nav-link" href="./finance.html">财务管理</a>
+      <a class="nav-link" href="./users.html" data-perm-any="user.manage">员工权限</a>
+    </aside>
+    <main class="main">
+      <section class="top">
+        <div><div class="title">库存管理</div><div class="hint">库存余额与台账</div></div>
+        <span id="loginStatus" class="status warn">未登录</span>
+      </section>
+
+      <section class="row">
+        <div class="card col-12">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+            <strong>库存余额</strong>
+            <button onclick="loadPage()">刷新</button>
+          </div>
+          <table>
+            <thead><tr><th>仓库</th><th>商品</th><th>现存</th><th>可用</th><th>更新时间</th></tr></thead>
+            <tbody id="balanceBody"><tr><td colspan="5">暂无数据</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="row">
+        <div class="card col-12">
+          <strong>库存台账（最近 30 条）</strong>
+          <table>
+            <thead><tr><th>时间</th><th>业务类型</th><th>单号</th><th>商品</th><th>变动</th><th>结存</th></tr></thead>
+            <tbody id="ledgerBody"><tr><td colspan="6">暂无数据</td></tr></tbody>
+          </table>
+          <div id="log" class="log">等待操作...</div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="./common.js"></script>
+  <script>
+    const log = setupAuthPanel("log");
+
+    async function loadPage() {
+      try {
+        const [b, l] = await Promise.all([
+          request("/inventory/balances"),
+          request("/inventory/ledger")
+        ]);
+        const balances = b.data.list || [];
+        const ledger = (l.data.list || []).slice(0, 30);
+
+        document.getElementById("balanceBody").innerHTML = balances.length
+          ? balances.map(x => `<tr><td>${x.warehouseName||"-"}</td><td>${x.productName||"-"}</td><td>${x.onHandQty||0}</td><td>${x.availableQty||0}</td><td>${(x.updatedAt||"").replace("T"," ").slice(0,19)}</td></tr>`).join("")
+          : "<tr><td colspan='5'>暂无数据</td></tr>";
+
+        document.getElementById("ledgerBody").innerHTML = ledger.length
+          ? ledger.map(x => `<tr><td>${(x.occurredAt||"").replace("T"," ").slice(0,19)}</td><td>${x.bizType||"-"}</td><td>${x.bizNo||"-"}</td><td>${x.productId||"-"}</td><td>${x.changeQty||0}</td><td>${x.balanceQty||0}</td></tr>`).join("")
+          : "<tr><td colspan='6'>暂无数据</td></tr>";
+
+        log("库存页面刷新成功。");
+      } catch (err) {
+        log("刷新失败: " + safeMsg(err));
+      }
+    }
+  </script>
+</body>
+</html>

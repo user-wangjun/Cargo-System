@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>销售管理</title>
+  <link rel="stylesheet" href="./common.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="side">
+      <div class="logo">Cargo Admin</div>
+      <a class="nav-link" href="./index.html">总览仪表盘</a>
+      <a class="nav-link active" href="./orders.html">销售管理</a>
+      <a class="nav-link" href="./inventory.html">库存管理</a>
+      <a class="nav-link" href="./finance.html">财务管理</a>
+      <a class="nav-link" href="./users.html" data-perm-any="user.manage">员工权限</a>
+    </aside>
+    <main class="main">
+      <section class="top">
+        <div><div class="title">销售管理</div><div class="hint">建单、查看、确认草稿单</div></div>
+        <span id="loginStatus" class="status warn">未登录</span>
+      </section>
+
+      <section class="row">
+        <div class="card col-12" data-perm-any="order.edit">
+          <strong>快速建销售单</strong>
+          <div class="grid-4" style="margin-top:8px;">
+            <div><div class="label">客户</div><select id="customerSelect"></select></div>
+            <div><div class="label">商品</div><select id="productSelect"></select></div>
+            <div><div class="label">数量</div><input id="qtyInput" type="number" min="1" value="10" /></div>
+            <div><div class="label">单价</div><input id="priceInput" type="number" min="0" value="100" /></div>
+          </div>
+          <div style="margin-top:10px;display:flex;gap:8px;">
+            <button onclick="createOrder()" data-perm-any="order.edit">创建</button>
+            <button class="ghost" onclick="loadPage()">刷新列表</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="row">
+        <div class="card col-12">
+          <strong>销售单列表</strong>
+          <table>
+            <thead><tr><th>订单号</th><th>客户</th><th>日期</th><th>状态</th><th>操作</th></tr></thead>
+            <tbody id="ordersBody"><tr><td colspan="5">暂无数据</td></tr></tbody>
+          </table>
+          <div id="log" class="log">等待操作...</div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="./common.js"></script>
+  <script>
+    const log = setupAuthPanel("log");
+    const state = { customers: [], products: [], orders: [] };
+
+    function renderSelect(id, list, labelFn) {
+      const el = document.getElementById(id);
+      el.innerHTML = list.length
+        ? list.map(x => `<option value="${x.id}">${labelFn(x)}</option>`).join("")
+        : "<option value=''>请先加载</option>";
+    }
+
+    function renderOrders() {
+      const body = document.getElementById("ordersBody");
+      body.innerHTML = state.orders.length
+        ? state.orders.map(x => `<tr><td>${x.orderNo||"-"}</td><td>${x.customerName||"-"}</td><td>${(x.orderDate||"").slice(0,10)}</td><td>${x.status||"-"}</td><td>${x.status==="DRAFT" && hasPermission("order.approve")?`<button class='small' onclick="confirmOrder('${x.id}')">确认</button>`:"-"}</td></tr>`).join("")
+        : "<tr><td colspan='5'>暂无数据</td></tr>";
+    }
+
+    async function loadPage() {
+      try {
+        const [c, p, o] = await Promise.all([
+          request("/customers?page=1&pageSize=200"),
+          request("/products"),
+          request("/sales-orders?page=1&pageSize=50")
+        ]);
+        state.customers = c.data.list || [];
+        state.products = p.data || [];
+        state.orders = o.data.list || [];
+        renderSelect("customerSelect", state.customers, x => `${x.name} (${x.customerCode||"NO-CODE"})`);
+        renderSelect("productSelect", state.products, x => `${x.name} (${x.productCode||"NO-CODE"})`);
+        renderOrders();
+        log("销售页面刷新成功。");
+      } catch (err) {
+        log("加载失败: " + safeMsg(err));
+      }
+    }
+
+    async function createOrder() {
+      try {
+        const customerId = document.getElementById("customerSelect").value;
+        const productId = document.getElementById("productSelect").value;
+        const qty = Number(document.getElementById("qtyInput").value);
+        const price = Number(document.getElementById("priceInput").value);
+        const product = state.products.find(x => x.id === productId);
+        if (!customerId || !product) throw new Error("请选择客户和商品");
+        const payload = {
+          orderDate: new Date().toISOString().slice(0, 10),
+          customerId,
+          remarks: "Admin order page",
+          items: [{ lineNo: 1, productId, orderedQty: qty, unitId: product.baseUnitId, unitPrice: price }]
+        };
+        const res = await request("/sales-orders", { method: "POST", body: JSON.stringify(payload) });
+        log(res);
+        await loadPage();
+      } catch (err) {
+        log("创建失败: " + safeMsg(err));
+      }
+    }
+
+    async function confirmOrder(id) {
+      try {
+        const res = await request(`/sales-orders/${id}/confirm`, { method: "POST" });
+        log(res);
+        await loadPage();
+      } catch (err) {
+        log("确认失败: " + safeMsg(err));
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>回款登记</title>
+  <link rel="stylesheet" href="./common.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="side">
+      <div class="logo">Cargo User</div>
+      <a class="nav-link" href="./index.html">财务看板</a>
+      <a class="nav-link" href="./invoices.html">发票中心</a>
+      <a class="nav-link" href="./requests.html" data-perm-any="finance.edit,finance.approve">请款中心</a>
+      <a class="nav-link active" href="./receipts.html" data-perm-any="finance.edit">回款登记</a>
+    </aside>
+    <main class="main">
+      <section class="top">
+        <div><div class="title">回款登记</div><div class="hint">按发票录入回款</div></div>
+        <span id="loginStatus" class="status warn">未登录</span>
+      </section>
+
+      <section class="row">
+        <div class="card col-12" data-perm-any="finance.edit">
+          <strong>登记回款</strong>
+          <div class="grid-3" style="margin-top:8px;">
+            <div><div class="label">发票</div><select id="invoiceSelect"></select></div>
+            <div><div class="label">金额</div><input id="amountInput" type="number" min="0" value="100" /></div>
+            <div style="display:flex;align-items:end;gap:8px;"><button onclick="createReceipt()" data-perm-any="finance.edit">登记</button><button class="ghost" onclick="loadPage()">刷新</button></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="row">
+        <div class="card col-12">
+          <strong>回款列表</strong>
+          <table>
+            <thead><tr><th>回款单号</th><th>发票号</th><th>客户</th><th>金额</th><th>日期</th></tr></thead>
+            <tbody id="receiptBody"><tr><td colspan="5">暂无数据</td></tr></tbody>
+          </table>
+          <div id="log" class="log">等待操作...</div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="./common.js"></script>
+  <script>
+    const log = setupAuthPanel("log");
+    const state = { invoices: [], receipts: [] };
+
+    async function loadPage() {
+      try {
+        const [i, r] = await Promise.all([request("/invoices"), request("/receipts")]);
+        state.invoices = i.data || [];
+        state.receipts = r.data || [];
+
+        document.getElementById("invoiceSelect").innerHTML = state.invoices.length
+          ? state.invoices.map(x => `<option value="${x.id}">${x.invoiceNo} | ${x.customerName||"-"}</option>`).join("")
+          : "<option value=''>暂无发票</option>";
+        if (state.invoices.length) document.getElementById("amountInput").value = Number(state.invoices[0].totalAmount || 0);
+
+        document.getElementById("receiptBody").innerHTML = state.receipts.length
+          ? state.receipts.map(x => `<tr><td>${x.receiptNo||"-"}</td><td>${x.invoiceNo||"-"}</td><td>${x.customerName||"-"}</td><td>${x.amount||0}</td><td>${(x.receivedDate||"").slice(0,10)}</td></tr>`).join("")
+          : "<tr><td colspan='5'>暂无数据</td></tr>";
+
+        log("回款页面刷新成功。");
+      } catch (err) {
+        log("刷新失败: " + safeMsg(err));
+      }
+    }
+
+    async function createReceipt() {
+      try {
+        const invoiceId = document.getElementById("invoiceSelect").value;
+        const invoice = state.invoices.find(x => x.id === invoiceId);
+        const amount = Number(document.getElementById("amountInput").value);
+        if (!invoice) throw new Error("请先选择发票");
+        const payload = { customerId: invoice.customerId, invoiceId: invoice.id, receivedDate: new Date().toISOString().slice(0,10), amount };
+        const res = await request("/receipts", { method: "POST", body: JSON.stringify(payload) });
+        log(res);
+        await loadPage();
+      } catch (err) {
+        log("登记失败: " + safeMsg(err));
+      }
+    }
+  </script>
+</body>
+</html>

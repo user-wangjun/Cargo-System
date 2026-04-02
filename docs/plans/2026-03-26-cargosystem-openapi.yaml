@@ -1,0 +1,622 @@
+openapi: 3.0.3
+info:
+  title: CargoSystem API
+  version: 1.0.0
+  description: Single-company cargo workflow API (MVP)
+servers:
+  - url: /api/v1
+security:
+  - bearerAuth: []
+tags:
+  - name: Auth
+  - name: Customers
+  - name: Suppliers
+  - name: Products
+  - name: SalesOrders
+  - name: PurchaseReceipts
+  - name: DeliveryOrders
+  - name: Inventory
+  - name: Invoices
+  - name: PaymentRequests
+  - name: Receipts
+  - name: Audit
+paths:
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: User login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username: { type: string }
+                password: { type: string, format: password }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseLogin'
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Current user
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseUser'
+
+  /customers:
+    get:
+      tags: [Customers]
+      summary: List customers
+      parameters:
+        - in: query
+          name: keyword
+          schema: { type: string }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiResponseCustomerPage' }
+    post:
+      tags: [Customers]
+      summary: Create customer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CustomerCreate' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiResponseCustomer' }
+
+  /customers/{id}:
+    patch:
+      tags: [Customers]
+      summary: Update customer
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CustomerUpdate' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiResponseCustomer' }
+
+  /suppliers:
+    get:
+      tags: [Suppliers]
+      summary: List suppliers
+      responses:
+        '200':
+          description: OK
+    post:
+      tags: [Suppliers]
+      summary: Create supplier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SupplierCreate' }
+      responses:
+        '200':
+          description: OK
+
+  /products:
+    get:
+      tags: [Products]
+      summary: List products
+      responses:
+        '200':
+          description: OK
+    post:
+      tags: [Products]
+      summary: Create product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProductCreate' }
+      responses:
+        '200':
+          description: OK
+
+  /sales-orders:
+    get:
+      tags: [SalesOrders]
+      summary: List sales orders
+      parameters:
+        - in: query
+          name: orderNo
+          schema: { type: string }
+        - in: query
+          name: customerId
+          schema: { type: string, format: uuid }
+        - in: query
+          name: status
+          schema: { type: string }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: OK
+    post:
+      tags: [SalesOrders]
+      summary: Create sales order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SalesOrderCreate' }
+      responses:
+        '200':
+          description: OK
+
+  /sales-orders/{id}:
+    get:
+      tags: [SalesOrders]
+      summary: Sales order detail
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200': { description: OK }
+    patch:
+      tags: [SalesOrders]
+      summary: Update sales order
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SalesOrderCreate' }
+      responses:
+        '200': { description: OK }
+
+  /sales-orders/{id}/confirm:
+    post:
+      tags: [SalesOrders]
+      summary: Confirm sales order
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200': { description: OK }
+
+  /sales-orders/{id}/cancel:
+    post:
+      tags: [SalesOrders]
+      summary: Cancel sales order
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200': { description: OK }
+
+  /purchase-receipts:
+    get:
+      tags: [PurchaseReceipts]
+      summary: List purchase receipts
+      responses:
+        '200': { description: OK }
+    post:
+      tags: [PurchaseReceipts]
+      summary: Create purchase receipt
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PurchaseReceiptCreate' }
+      responses:
+        '200': { description: OK }
+
+  /purchase-receipts/{id}/post:
+    post:
+      tags: [PurchaseReceipts]
+      summary: Post inbound and update inventory
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200': { description: OK }
+
+  /delivery-orders:
+    get:
+      tags: [DeliveryOrders]
+      summary: List delivery orders
+      responses:
+        '200': { description: OK }
+    post:
+      tags: [DeliveryOrders]
+      summary: Create delivery order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DeliveryOrderCreate' }
+      responses:
+        '200': { description: OK }
+
+  /delivery-orders/{id}:
+    get:
+      tags: [DeliveryOrders]
+      summary: Delivery order detail
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200': { description: OK }
+    patch:
+      tags: [DeliveryOrders]
+      summary: Update delivery order (supports edit-after-print with versioning)
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DeliveryOrderCreate' }
+      responses:
+        '200': { description: OK }
+
+  /delivery-orders/{id}/post:
+    post:
+      tags: [DeliveryOrders]
+      summary: Post outbound and update inventory
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200': { description: OK }
+
+  /delivery-orders/{id}/print:
+    post:
+      tags: [DeliveryOrders]
+      summary: Mark as printed
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200': { description: OK }
+
+  /delivery-orders/{id}/versions:
+    get:
+      tags: [DeliveryOrders]
+      summary: Delivery order version history
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200': { description: OK }
+
+  /inventory/balances:
+    get:
+      tags: [Inventory]
+      summary: Inventory balances
+      parameters:
+        - in: query
+          name: warehouseId
+          schema: { type: string, format: uuid }
+        - in: query
+          name: keyword
+          schema: { type: string }
+      responses:
+        '200': { description: OK }
+
+  /inventory/ledger:
+    get:
+      tags: [Inventory]
+      summary: Inventory ledger
+      parameters:
+        - in: query
+          name: warehouseId
+          schema: { type: string, format: uuid }
+        - in: query
+          name: productId
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: OK }
+
+  /invoices:
+    get:
+      tags: [Invoices]
+      summary: List invoices
+      responses:
+        '200': { description: OK }
+    post:
+      tags: [Invoices]
+      summary: Create invoice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/InvoiceCreate' }
+      responses:
+        '200': { description: OK }
+
+  /payment-requests:
+    get:
+      tags: [PaymentRequests]
+      summary: List payment requests
+      responses:
+        '200': { description: OK }
+    post:
+      tags: [PaymentRequests]
+      summary: Create payment request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PaymentRequestCreate' }
+      responses:
+        '200': { description: OK }
+
+  /receipts:
+    get:
+      tags: [Receipts]
+      summary: List receipts
+      responses:
+        '200': { description: OK }
+    post:
+      tags: [Receipts]
+      summary: Create receipt record
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ReceiptCreate' }
+      responses:
+        '200': { description: OK }
+
+  /audit-logs:
+    get:
+      tags: [Audit]
+      summary: Query audit logs
+      parameters:
+        - in: query
+          name: entityType
+          schema: { type: string }
+        - in: query
+          name: entityId
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: OK }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    IdPath:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+        format: uuid
+    Page:
+      in: query
+      name: page
+      schema:
+        type: integer
+        default: 1
+    PageSize:
+      in: query
+      name: pageSize
+      schema:
+        type: integer
+        default: 20
+
+  schemas:
+    ApiResponseBase:
+      type: object
+      properties:
+        code: { type: integer, example: 0 }
+        message: { type: string, example: ok }
+
+    ApiResponseLogin:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponseBase'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                accessToken: { type: string }
+                user: { $ref: '#/components/schemas/User' }
+                roles:
+                  type: array
+                  items: { type: string }
+
+    ApiResponseUser:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponseBase'
+        - type: object
+          properties:
+            data: { $ref: '#/components/schemas/User' }
+
+    ApiResponseCustomer:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponseBase'
+        - type: object
+          properties:
+            data: { $ref: '#/components/schemas/Customer' }
+
+    ApiResponseCustomerPage:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponseBase'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                list:
+                  type: array
+                  items: { $ref: '#/components/schemas/Customer' }
+                total: { type: integer }
+                page: { type: integer }
+                pageSize: { type: integer }
+
+    User:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        username: { type: string }
+        fullName: { type: string }
+        isActive: { type: boolean }
+
+    Customer:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        customerCode: { type: string }
+        name: { type: string }
+        contactName: { type: string }
+        phone: { type: string }
+        address: { type: string }
+        isActive: { type: boolean }
+
+    CustomerCreate:
+      type: object
+      required: [customerCode, name]
+      properties:
+        customerCode: { type: string }
+        name: { type: string }
+        contactName: { type: string }
+        phone: { type: string }
+        address: { type: string }
+        isActive: { type: boolean, default: true }
+
+    CustomerUpdate:
+      type: object
+      properties:
+        name: { type: string }
+        contactName: { type: string }
+        phone: { type: string }
+        address: { type: string }
+        isActive: { type: boolean }
+
+    SupplierCreate:
+      type: object
+      required: [supplierCode, name]
+      properties:
+        supplierCode: { type: string }
+        name: { type: string }
+        contactName: { type: string }
+        phone: { type: string }
+        address: { type: string }
+
+    ProductCreate:
+      type: object
+      required: [productCode, name, baseUnitId]
+      properties:
+        productCode: { type: string }
+        name: { type: string }
+        baseUnitId: { type: string, format: uuid }
+        spec: { type: string }
+        color: { type: string }
+
+    SalesOrderCreate:
+      type: object
+      required: [orderDate, customerId, items]
+      properties:
+        orderDate: { type: string, format: date }
+        customerId: { type: string, format: uuid }
+        remarks: { type: string }
+        items:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [lineNo, productId, orderedQty, unitId]
+            properties:
+              lineNo: { type: integer }
+              productId: { type: string, format: uuid }
+              orderedQty: { type: number, minimum: 0.001 }
+              unitId: { type: string, format: uuid }
+              unitPrice: { type: number }
+
+    PurchaseReceiptCreate:
+      type: object
+      required: [receiptDate, supplierId, items]
+      properties:
+        receiptDate: { type: string, format: date }
+        supplierId: { type: string, format: uuid }
+        remarks: { type: string }
+        items:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [lineNo, productId, receivedQty, unitId]
+            properties:
+              lineNo: { type: integer }
+              productId: { type: string, format: uuid }
+              receivedQty: { type: number, minimum: 0.001 }
+              unitId: { type: string, format: uuid }
+              relatedSalesOrderItemId: { type: string, format: uuid }
+
+    DeliveryOrderCreate:
+      type: object
+      required: [deliveryDate, customerId, warehouseId, items]
+      properties:
+        deliveryDate: { type: string, format: date }
+        customerId: { type: string, format: uuid }
+        warehouseId: { type: string, format: uuid }
+        remarks: { type: string }
+        items:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [lineNo, productId, deliveredQty, unitId]
+            properties:
+              lineNo: { type: integer }
+              productId: { type: string, format: uuid }
+              deliveredQty: { type: number, minimum: 0.001 }
+              unitId: { type: string, format: uuid }
+              relatedSalesOrderItemId: { type: string, format: uuid }
+
+    InvoiceCreate:
+      type: object
+      required: [customerId, invoiceDate, totalAmount]
+      properties:
+        customerId: { type: string, format: uuid }
+        deliveryOrderId: { type: string, format: uuid }
+        invoiceDate: { type: string, format: date }
+        totalAmount: { type: number, minimum: 0 }
+
+    PaymentRequestCreate:
+      type: object
+      required: [customerId, requestDate, requestedAmount]
+      properties:
+        customerId: { type: string, format: uuid }
+        invoiceId: { type: string, format: uuid }
+        requestDate: { type: string, format: date }
+        requestedAmount: { type: number, minimum: 0 }
+
+    ReceiptCreate:
+      type: object
+      required: [customerId, receivedDate, amount]
+      properties:
+        customerId: { type: string, format: uuid }
+        invoiceId: { type: string, format: uuid }
+        receivedDate: { type: string, format: date }
+        amount: { type: number, minimum: 0 }

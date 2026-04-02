@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>发票中心</title>
+  <link rel="stylesheet" href="./common.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="side">
+      <div class="logo">Cargo User</div>
+      <a class="nav-link" href="./index.html">财务看板</a>
+      <a class="nav-link active" href="./invoices.html">发票中心</a>
+      <a class="nav-link" href="./requests.html" data-perm-any="finance.edit,finance.approve">请款中心</a>
+      <a class="nav-link" href="./receipts.html" data-perm-any="finance.edit">回款登记</a>
+    </aside>
+    <main class="main">
+      <section class="top">
+        <div><div class="title">发票中心</div><div class="hint">查看全部发票</div></div>
+        <span id="loginStatus" class="status warn">未登录</span>
+      </section>
+
+      <section class="row">
+        <div class="card col-12">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><strong>发票列表</strong><button onclick="loadPage()">刷新</button></div>
+          <table>
+            <thead><tr><th>发票号</th><th>客户</th><th>出库单</th><th>金额</th><th>状态</th><th>日期</th></tr></thead>
+            <tbody id="invoiceBody"><tr><td colspan="6">暂无数据</td></tr></tbody>
+          </table>
+          <div id="log" class="log">等待操作...</div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="./common.js"></script>
+  <script>
+    const log = setupAuthPanel("log");
+
+    async function loadPage() {
+      try {
+        const res = await request("/invoices");
+        const rows = res.data || [];
+        document.getElementById("invoiceBody").innerHTML = rows.length
+          ? rows.map(x => `<tr><td>${x.invoiceNo||"-"}</td><td>${x.customerName||"-"}</td><td>${x.deliveryNo||"-"}</td><td>${x.totalAmount||0}</td><td>${x.status||"-"}</td><td>${(x.invoiceDate||"").slice(0,10)}</td></tr>`).join("")
+          : "<tr><td colspan='6'>暂无数据</td></tr>";
+        log("发票刷新成功。");
+      } catch (err) {
+        log("刷新失败: " + safeMsg(err));
+      }
+    }
+  </script>
+</body>
+</html>

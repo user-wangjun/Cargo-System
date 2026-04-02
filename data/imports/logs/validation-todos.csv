@@ -1,0 +1,4 @@
+﻿priority,rule,value,risk,suggestion,owner_hint,status
+P1,发票金额对账差异,22946.70,财务对账不平，影响请款与回款核销,核查 import_stg.invoices 与 invoices 的金额口径（含小缸费/税额）,业务+财务,TODO
+P1,出货数量对账差异,27210.400,库存台账与历史送货数量不一致,核查单位换算和被过滤行（空数量/合计行）,业务+财务,TODO
+P2,送货单未关联合同发票,17,存在漏开票或开票未回写送货单风险,按 delivery_no 批量回填 invoices.delivery_order_id 或补开票,业务+财务,TODO

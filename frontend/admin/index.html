@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>管理员总览</title>
+  <link rel="stylesheet" href="./common.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="side">
+      <div class="logo">Cargo Admin</div>
+      <a class="nav-link active" href="./index.html">总览仪表盘</a>
+      <a class="nav-link" href="./orders.html">销售管理</a>
+      <a class="nav-link" href="./inventory.html">库存管理</a>
+      <a class="nav-link" href="./finance.html">财务管理</a>
+      <a class="nav-link" href="./users.html" data-perm-any="user.manage">员工权限</a>
+    </aside>
+    <main class="main">
+      <section class="top">
+        <div>
+          <div class="title">管理员总览</div>
+          <div class="hint">看板风格：核心指标 + 最近订单 + 快捷入口</div>
+        </div>
+        <span id="loginStatus" class="status warn">未登录</span>
+      </section>
+
+      <section class="row">
+        <div class="card kpi"><div class="k">客户数</div><div class="v" id="kpiCustomers">0</div></div>
+        <div class="card kpi"><div class="k">商品数</div><div class="v" id="kpiProducts">0</div></div>
+        <div class="card kpi"><div class="k">销售单数</div><div class="v" id="kpiOrders">0</div></div>
+        <div class="card kpi"><div class="k">草稿单</div><div class="v" id="kpiDraft">0</div></div>
+      </section>
+
+      <section class="row">
+        <div class="card col-8">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+            <strong>最近销售单</strong>
+            <button onclick="loadDashboard()">刷新</button>
+          </div>
+          <table>
+            <thead><tr><th>订单号</th><th>客户</th><th>日期</th><th>状态</th></tr></thead>
+            <tbody id="ordersBody"><tr><td colspan="4">暂无数据</td></tr></tbody>
+          </table>
+        </div>
+        <div class="card col-4">
+          <strong>登录面板</strong>
+          <div class="grid-2" style="margin-top:8px;">
+            <div><div class="label">用户名</div><input id="username" value="admin" /></div>
+            <div><div class="label">密码</div><input id="password" type="password" value="admin123" /></div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+            <button id="loginBtn">登录</button>
+            <button class="ghost" id="meBtn">当前用户</button>
+            <button class="ghost" id="logoutBtn">退出</button>
+          </div>
+          <div class="hint" id="userInfo" style="margin-top:8px;">默认账号：admin / admin123</div>
+          <div id="log" class="log">等待操作...</div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="./common.js"></script>
+  <script>
+    const log = setupAuthPanel("log");
+
+    async function loadDashboard() {
+      try {
+        const [c, p, o] = await Promise.all([
+          request("/customers?page=1&pageSize=200"),
+          request("/products"),
+          request("/sales-orders?page=1&pageSize=20")
+        ]);
+        const customers = c.data.list || [];
+        const products = p.data || [];
+        const orders = o.data.list || [];
+
+        document.getElementById("kpiCustomers").textContent = String(customers.length);
+        document.getElementById("kpiProducts").textContent = String(products.length);
+        document.getElementById("kpiOrders").textContent = String(orders.length);
+        document.getElementById("kpiDraft").textContent = String(orders.filter(x => x.status === "DRAFT").length);
+
+        const body = document.getElementById("ordersBody");
+        body.innerHTML = orders.length
+          ? orders.map(x => `<tr><td>${x.orderNo||"-"}</td><td>${x.customerName||"-"}</td><td>${(x.orderDate||"").slice(0,10)}</td><td>${x.status||"-"}</td></tr>`).join("")
+          : "<tr><td colspan='4'>暂无数据</td></tr>";
+
+        log("总览数据刷新成功。");
+      } catch (err) {
+        log("刷新失败: " + safeMsg(err));
+      }
+    }
+  </script>
+</body>
+</html>

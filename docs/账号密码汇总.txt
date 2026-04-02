@@ -1,0 +1,45 @@
+CargoSystem 账号密码汇总
+更新时间: 2026-03-30
+
+【业务登录账号（Auth API）】
+1) 平台超级管理员
+- 用户名: admin
+- 密码: admin123
+- 角色: ADMIN
+
+2) 企业老板（企业管理员）
+- 用户名: owner
+- 密码: owner123
+- 角色: OWNER
+- 权限: 可管理企业员工权限（user.manage）
+
+3) 财务员工
+- 用户名: finance
+- 密码: finance123
+- 角色: FINANCE
+- 权限: finance.edit / finance.approve
+
+4) 只读员工
+- 用户名: viewer
+- 密码: viewer123
+- 角色: VIEWER
+- 权限: 仅查看（无编辑权限）
+
+【前端地址】
+- 管理端: http://127.0.0.1:5173/index.html
+- 用户端: http://127.0.0.1:5174/index.html
+
+【后端地址】
+- API Base: http://127.0.0.1:3000/api/v1
+- Swagger:  http://127.0.0.1:3000/api/docs
+
+【PostgreSQL 本机数据库】
+- 主机: 127.0.0.1
+- 端口: 5432
+- 数据库: cargosystem
+- 用户名: postgres
+- 密码: qq155255355
+
+【运维脚本】
+- 一键启动: powershell -ExecutionPolicy Bypass -File scripts/start-all.ps1
+- 一键停止: powershell -ExecutionPolicy Bypass -File scripts/stop-all.ps1

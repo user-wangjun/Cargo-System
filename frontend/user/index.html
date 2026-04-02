@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>用户总览</title>
+  <link rel="stylesheet" href="./common.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="side">
+      <div class="logo">Cargo User</div>
+      <a class="nav-link active" href="./index.html">财务看板</a>
+      <a class="nav-link" href="./invoices.html">发票中心</a>
+      <a class="nav-link" href="./requests.html" data-perm-any="finance.edit,finance.approve">请款中心</a>
+      <a class="nav-link" href="./receipts.html" data-perm-any="finance.edit">回款登记</a>
+    </aside>
+    <main class="main">
+      <section class="top">
+        <div><div class="title">用户总览</div><div class="hint">指标总览 + 快速登录</div></div>
+        <span id="loginStatus" class="status warn">未登录</span>
+      </section>
+
+      <section class="row">
+        <div class="card kpi"><div class="k">发票数</div><div class="v" id="kpiInv">0</div></div>
+        <div class="card kpi"><div class="k">请款单数</div><div class="v" id="kpiReq">0</div></div>
+        <div class="card kpi"><div class="k">回款数</div><div class="v" id="kpiRec">0</div></div>
+      </section>
+
+      <section class="row">
+        <div class="card col-8">
+          <strong>最近发票</strong>
+          <table>
+            <thead><tr><th>发票号</th><th>客户</th><th>金额</th><th>状态</th></tr></thead>
+            <tbody id="invoiceBody"><tr><td colspan="4">暂无数据</td></tr></tbody>
+          </table>
+        </div>
+        <div class="card col-4">
+          <strong>登录面板</strong>
+          <div class="grid-2" style="margin-top:8px;">
+            <div><div class="label">用户名</div><input id="username" value="finance" /></div>
+            <div><div class="label">密码</div><input id="password" type="password" value="finance123" /></div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+            <button id="loginBtn">登录</button>
+            <button class="ghost" id="meBtn">当前用户</button>
+            <button class="ghost" id="logoutBtn">退出</button>
+          </div>
+          <div id="userInfo" class="hint" style="margin-top:8px;">默认账号：finance / finance123</div>
+          <div id="log" class="log">等待操作...</div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="./common.js"></script>
+  <script>
+    const log = setupAuthPanel("log");
+
+    async function loadDashboard() {
+      try {
+        const [i, p, r] = await Promise.all([
+          request("/invoices"),
+          request("/payment-requests"),
+          request("/receipts")
+        ]);
+        const invoices = i.data || [];
+        const requests = p.data || [];
+        const receipts = r.data || [];
+
+        document.getElementById("kpiInv").textContent = String(invoices.length);
+        document.getElementById("kpiReq").textContent = String(requests.length);
+        document.getElementById("kpiRec").textContent = String(receipts.length);
+
+        document.getElementById("invoiceBody").innerHTML = invoices.length
+          ? invoices.slice(0, 10).map(x => `<tr><td>${x.invoiceNo||"-"}</td><td>${x.customerName||"-"}</td><td>${x.totalAmount||0}</td><td>${x.status||"-"}</td></tr>`).join("")
+          : "<tr><td colspan='4'>暂无数据</td></tr>";
+
+        log("总览刷新成功。");
+      } catch (err) {
+        log("刷新失败: " + safeMsg(err));
+      }
+    }
+  </script>
+</body>
+</html>
