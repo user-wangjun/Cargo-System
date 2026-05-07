@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>用户登录 - Cargo 用户端</title>
+  <link rel="stylesheet" href="./common.css" />
+</head>
+<body data-require-auth="false">
+  <main class="layout-main auth-shell">
+    <section class="card auth-card" style="max-width:420px;">
+      <div class="card__header" style="margin-bottom:12px;">
+        <h1 class="card__title" style="font-size:20px;">Cargo 用户端登录</h1>
+        <p class="auth-intro">适合财务、查看员等企业员工登录。企业注册入口在管理端，由负责人先完成企业开通。</p>
+      </div>
+      <div class="form-item" style="margin-bottom:10px;">
+        <label class="form-label form-label--required" for="username">账号（手机号）</label>
+        <input class="form-input" id="username" value="finance" placeholder="请输入账号或手机号" />
+        <span class="form-error" id="err-username"></span>
+      </div>
+      <div class="form-item" style="margin-bottom:14px;">
+        <label class="form-label form-label--required" for="password">密码</label>
+        <div class="input-with-action">
+          <input class="form-input" id="password" type="password" value="finance123" />
+          <button class="input-action" type="button" data-toggle-target="password" data-toggle-label="密码" aria-label="显示密码" aria-pressed="false">显示</button>
+        </div>
+        <span class="form-error" id="err-password"></span>
+      </div>
+      <button class="btn btn--primary" id="loginBtn" style="width:100%;justify-content:center;">登录</button>
+      <div class="auth-links auth-links--center">
+        <a href="../admin/register.html">没有企业账号？去注册企业</a>
+        <a href="../admin/login.html">负责人已有账号？去管理端登录</a>
+      </div>
+      <p class="auth-note">注册企业后会先进入管理端，再由企业负责人创建员工账号。</p>
+    </section>
+  </main>
+  <div class="toast-container" id="toastContainer"></div>
+  <script src="./config.js"></script>
+  <script src="./common.js"></script>
+  <script>
+    initTheme();
+    initInputToggles();
+    if (getToken()) window.location.href = "./index.html";
+    document.getElementById("loginBtn").onclick = async () => {
+      clearFieldErrors(["username", "password"]);
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value;
+      if (!username) showFieldError("username", "请输入账号或手机号");
+      if (!password) showFieldError("password", "请输入密码");
+      if (!username || !password) return;
+      try {
+        const res = await request("/auth/login", { method: "POST", body: JSON.stringify({ username, password }) });
+        setToken(res.data?.accessToken || "");
+        const user = res.data?.user || {};
+        setUser({
+          ...user,
+          roles: user.roles || res.data?.roles || [],
+          permissions: user.permissions || res.data?.permissions || [],
+        });
+        showToast("success", "登录成功");
+        setTimeout(() => { window.location.href = "./index.html"; }, 250);
+      } catch (err) {
+        const msg = getErrorMessage(err);
+        if (msg.toLowerCase().includes("invalid username or password") || msg.toLowerCase().includes("invalid account or password")) {
+          showFieldError("password", "账号或密码错误");
+          return;
+        }
+        showToast("error", "登录失败：" + msg);
+      }
+    };
+  </script>
+</body>
+</html>

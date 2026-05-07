@@ -1,0 +1,1565 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>总览仪表盘 - Cargo 管理系统</title>
+  <link rel="stylesheet" href="./common.css" />
+  <style>
+    .recent-orders-table {
+      table-layout: fixed;
+      width: 100%;
+    }
+
+    .recent-orders-table th,
+    .recent-orders-table td {
+      font-size: 12px;
+      padding: 7px 8px;
+      line-height: 1.3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      vertical-align: middle;
+    }
+
+    .recent-orders-table th {
+      color: var(--color-text-secondary);
+      font-weight: 600;
+    }
+
+    .recent-orders-table .badge {
+      font-size: 12px;
+      padding: 1px 6px;
+    }
+
+    .recent-orders-table .table__cell-link {
+      font-size: 12px;
+    }
+
+    .recent-orders-table th:nth-child(n + 3),
+    .recent-orders-table td:nth-child(n + 3) {
+      text-align: center;
+    }
+
+    .recent-orders-table td[data-col="amount"],
+    .recent-orders-table td[data-col="received"],
+    .recent-orders-table td[data-col="remaining"] {
+      font-variant-numeric: tabular-nums;
+    }
+  </style>
+</head>
+<body data-require-auth="false">
+
+  <!-- 顶部导航栏 -->
+  <header class="nav-bar" id="navbar">
+    <div class="nav-bar__left">
+      <button class="nav-bar__hamburger" id="hamburgerBtn" aria-label="菜单">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+          <rect x="2" y="4" width="14" height="1.5" rx="0.75" fill="currentColor"/>
+          <rect x="2" y="8.25" width="14" height="1.5" rx="0.75" fill="currentColor"/>
+          <rect x="2" y="12.5" width="14" height="1.5" rx="0.75" fill="currentColor"/>
+        </svg>
+      </button>
+      <a class="nav-bar__logo" href="./index.html">
+        <span class="nav-bar__logo-icon" aria-hidden="true" style="font-size:20px;">📦</span>
+        <span class="nav-bar__logo-text">Cargo 管理系统</span>
+      </a>
+    </div>
+    <div class="nav-bar__right">
+      <button class="nav-bar__theme-btn" id="themeBtn" aria-label="切换主题">🌙</button>
+      <span class="nav-bar__user">
+        <span class="nav-bar__username" id="navUsername">未登录</span>
+        <span class="badge badge--blue nav-bar__role" id="navRole" style="display:none;"></span>
+      </span>
+      <button class="btn btn--ghost btn--sm" id="logoutBtn">退出</button>
+    </div>
+  </header>
+
+  <!-- 侧边菜单 -->
+  <aside class="layout-sidebar" id="sidebar">
+    <nav class="sidebar__nav" role="navigation" aria-label="主导航">
+      <a class="sidebar__item active" href="./index.html" data-tooltip="总览仪表盘">
+        <svg class="sidebar__icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M8 8L8 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M8 8L11 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <circle cx="8" cy="8" r="1" fill="currentColor"/>
+        </svg>
+        <span class="sidebar__label">总览仪表盘</span>
+      </a>
+      <a class="sidebar__item" href="./orders.html" data-tooltip="销售管理">
+        <svg class="sidebar__icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M2 2h1.5l1.8 7.5h7l1.2-5H5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="7" cy="13" r="1" fill="currentColor"/>
+          <circle cx="11" cy="13" r="1" fill="currentColor"/>
+        </svg>
+        <span class="sidebar__label">销售管理</span>
+      </a>
+      <a class="sidebar__item" href="./inventory.html" data-tooltip="库存管理">
+        <svg class="sidebar__icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <rect x="1.5" y="7" width="13" height="7.5" rx="1" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M1.5 7l6.5-5.5L14.5 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <rect x="5.5" y="10" width="5" height="4.5" rx="0.5" stroke="currentColor" stroke-width="1.2"/>
+        </svg>
+        <span class="sidebar__label">库存管理</span>
+      </a>
+      <a class="sidebar__item" href="./finance.html" data-tooltip="财务管理">
+        <svg class="sidebar__icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <rect x="1.5" y="2.5" width="13" height="11" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M1.5 6h13" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M5 9.5h2M9 9.5h2M5 12h2M9 12h2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>
+        <span class="sidebar__label">财务管理</span>
+      </a>
+      <a class="sidebar__item" href="./users.html" data-perm-any="user.manage" data-tooltip="员工权限">
+        <svg class="sidebar__icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <circle cx="6" cy="5" r="2.5" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M1.5 13.5c0-2.485 2.015-4.5 4.5-4.5s4.5 2.015 4.5 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M11 7.5c1.105 0 2 .895 2 2M13 4.5c.828 0 1.5.672 1.5 1.5S13.828 7.5 13 7.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+        </svg>
+        <span class="sidebar__label">员工权限</span>
+      </a>
+    </nav>
+  </aside>
+
+  <!-- 移动端遮罩 -->
+  <div class="drawer-overlay" id="drawerOverlay"></div>
+
+  <!-- 主内容区 -->
+  <main class="layout-main" id="layoutMain">
+    <!-- 面包屑 -->
+    <nav class="breadcrumb" aria-label="面包屑导航">
+      <a class="breadcrumb__item" href="./index.html">首页</a>
+      <span class="breadcrumb__sep" aria-hidden="true">/</span>
+      <span class="breadcrumb__item breadcrumb__item--active">总览仪表盘</span>
+    </nav>
+
+    <div class="page-content">
+      <section class="welcome-banner" id="authWelcomeBanner" hidden></section>
+
+      <!-- 页面标题卡片 -->
+      <div class="card" style="margin-bottom:var(--space-lg);">
+        <div class="card__header">
+          <h1 class="card__title" style="font-size:18px;">总览仪表盘</h1>
+          <button class="btn btn--default btn--sm" id="refreshBtn" aria-label="刷新数据">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <path d="M12.5 7A5.5 5.5 0 1 1 7 1.5a5.5 5.5 0 0 1 4.5 2.3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+              <path d="M12.5 1.5v2.5H10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            刷新
+          </button>
+        </div>
+      </div>
+
+      <div class="card" id="refreshPolicyCard" style="margin-bottom:var(--space-lg);display:none;">
+        <div class="card__header">
+          <h2 class="card__title">刷新策略设置（登录后）</h2>
+        </div>
+        <div style="display:flex;align-items:center;gap:var(--space-sm);margin-bottom:var(--space-md);flex-wrap:wrap;">
+          <span style="color:var(--color-text-secondary);font-size:13px;">当前公司邀请码：</span>
+          <code id="companyInviteCodeText" style="padding:4px 8px;border-radius:6px;background:var(--color-bg-base);border:1px solid var(--color-border);font-size:13px;">加载中...</code>
+          <button class="btn btn--default btn--sm" id="copyInviteCodeBtn" type="button">复制邀请码</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:var(--space-md);max-width:760px;">
+          <div class="form-item">
+            <label class="form-label" for="refreshPolicy">刷新策略</label>
+            <select class="form-select" id="refreshPolicy">
+              <option value="1d">1 天</option>
+              <option value="10d">10 天</option>
+              <option value="30d">1 个月</option>
+              <option value="none">不刷新</option>
+              <option value="custom">自定义（天）</option>
+            </select>
+          </div>
+          <div class="form-item" id="customRefreshWrap" hidden>
+            <label class="form-label form-label--required" for="customRefreshDays">自定义天数</label>
+            <input class="form-input" id="customRefreshDays" type="number" min="1" max="365" placeholder="请输入 1-365" />
+            <span class="form-error" id="err-customRefreshDays"></span>
+          </div>
+        </div>
+        <div style="display:flex;gap:var(--space-sm);margin-top:var(--space-lg);">
+          <button class="btn btn--primary btn--sm" id="saveRefreshPolicyBtn">保存刷新策略</button>
+        </div>
+        <p id="refreshPolicyHint" style="margin:8px 0 0;color:var(--color-text-secondary);font-size:12px;">
+          登录后将根据策略自动刷新
+        </p>
+      </div>
+
+      <!-- 经营总览 -->
+      <div class="dashboard-summary-grid" id="summaryGrid">
+        <div class="summary-card" data-tone="primary">
+          <div class="summary-card__head">
+            <div class="summary-card__label">累计销售额</div>
+            <label class="summary-card__unit-switch" for="amountUnitSelectSales">
+              <span>计价单位</span>
+              <select id="amountUnitSelectSales" class="summary-card__unit-select js-amount-unit-select">
+                <option value="yuan">元</option>
+                <option value="wan">万元</option>
+                <option value="million">百万元</option>
+              </select>
+            </label>
+          </div>
+          <div class="summary-card__value" id="summaryTotalSales">
+            <span class="skeleton skeleton--title" style="display:inline-block;width:120px;"></span>
+          </div>
+          <div class="summary-card__sub" id="summaryTotalSalesSub">
+            <span class="skeleton skeleton--text" style="display:inline-block;width:150px;"></span>
+          </div>
+        </div>
+        <div class="summary-card" data-tone="cyan">
+          <div class="summary-card__head">
+            <div class="summary-card__label">累计回款额</div>
+            <label class="summary-card__unit-switch" for="amountUnitSelectReceived">
+              <span>计价单位</span>
+              <select id="amountUnitSelectReceived" class="summary-card__unit-select js-amount-unit-select">
+                <option value="yuan">元</option>
+                <option value="wan">万元</option>
+                <option value="million">百万元</option>
+              </select>
+            </label>
+          </div>
+          <div class="summary-card__value" id="summaryTotalReceived">
+            <span class="skeleton skeleton--title" style="display:inline-block;width:120px;"></span>
+          </div>
+          <div class="summary-card__sub" id="summaryTotalReceivedSub">
+            <span class="skeleton skeleton--text" style="display:inline-block;width:150px;"></span>
+          </div>
+        </div>
+        <div class="summary-card" data-tone="purple">
+          <div class="summary-card__head">
+            <div class="summary-card__label">待回款额</div>
+            <label class="summary-card__unit-switch" for="amountUnitSelectPending">
+              <span>计价单位</span>
+              <select id="amountUnitSelectPending" class="summary-card__unit-select js-amount-unit-select">
+                <option value="yuan">元</option>
+                <option value="wan">万元</option>
+                <option value="million">百万元</option>
+              </select>
+            </label>
+          </div>
+          <div class="summary-card__value" id="summaryPendingAmount">
+            <span class="skeleton skeleton--title" style="display:inline-block;width:120px;"></span>
+          </div>
+          <div class="summary-card__sub" id="summaryPendingAmountSub">
+            <span class="skeleton skeleton--text" style="display:inline-block;width:150px;"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 运营 KPI -->
+      <div class="kpi-grid kpi-grid--compact" id="kpiGrid">
+        <!-- 客户数 -->
+        <div class="kpi-card" data-color="blue">
+          <div class="kpi-card__icon-wrap" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <circle cx="9" cy="7" r="3.5" stroke="currentColor" stroke-width="1.8"/>
+              <path d="M2 20c0-3.866 3.134-7 7-7s7 3.134 7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              <path d="M17 11c1.657 0 3 1.343 3 3M20 7c1.105 0 2 .895 2 2s-.895 2-2 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="kpi-card__body">
+            <div class="kpi-card__label">客户数</div>
+            <div class="kpi-card__value" id="kpiCustomers">
+              <span class="skeleton skeleton--title" style="display:inline-block;width:60px;"></span>
+            </div>
+            <div class="kpi-card__sub" id="kpiCustomersSub">
+              <span class="skeleton skeleton--text" style="display:inline-block;width:80px;"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 商品数 -->
+        <div class="kpi-card" data-color="green">
+          <div class="kpi-card__icon-wrap" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.8"/>
+              <path d="M3 9h18M9 3v18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="kpi-card__body">
+            <div class="kpi-card__label">商品数</div>
+            <div class="kpi-card__value" id="kpiProducts">
+              <span class="skeleton skeleton--title" style="display:inline-block;width:60px;"></span>
+            </div>
+            <div class="kpi-card__sub" id="kpiProductsSub">
+              <span class="skeleton skeleton--text" style="display:inline-block;width:80px;"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 销售单数 -->
+        <div class="kpi-card" data-color="orange">
+          <div class="kpi-card__icon-wrap" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M4 4h2.5l2.7 10.5h9l1.8-7H8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="10.5" cy="19" r="1.5" fill="currentColor"/>
+              <circle cx="16.5" cy="19" r="1.5" fill="currentColor"/>
+            </svg>
+          </div>
+          <div class="kpi-card__body">
+            <div class="kpi-card__label">销售单数</div>
+            <div class="kpi-card__value" id="kpiOrders">
+              <span class="skeleton skeleton--title" style="display:inline-block;width:60px;"></span>
+            </div>
+            <div class="kpi-card__sub" id="kpiOrdersSub">
+              <span class="skeleton skeleton--text" style="display:inline-block;width:80px;"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 库存预警 -->
+        <div class="kpi-card" data-color="red">
+          <div class="kpi-card__icon-wrap" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M12 3L2 20h20L12 3z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+              <path d="M12 10v5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              <circle cx="12" cy="17.5" r="1" fill="currentColor"/>
+            </svg>
+          </div>
+          <div class="kpi-card__body">
+            <div class="kpi-card__label">库存预警</div>
+            <div class="kpi-card__value" id="kpiAlerts">
+              <span class="skeleton skeleton--title" style="display:inline-block;width:60px;"></span>
+            </div>
+            <div class="kpi-card__sub" id="kpiAlertsSub">
+              <span class="skeleton skeleton--text" style="display:inline-block;width:80px;"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 图表分析 -->
+      <div class="dashboard-chart-grid">
+        <section class="card chart-card">
+          <div class="card__header">
+            <h2 class="card__title">订单状态分布</h2>
+            <span class="chart-card__legend">按状态统计订单数量</span>
+          </div>
+          <div class="vbar-chart" id="statusChart">
+            <div class="chart-empty">加载中...</div>
+          </div>
+        </section>
+
+        <section class="card chart-card">
+          <div class="card__header">
+            <h2 class="card__title">近 6 月销售与回款趋势</h2>
+            <span class="chart-card__legend" id="trendUnitLegend">单位：元</span>
+          </div>
+          <div class="line-chart-wrap">
+            <svg class="line-chart" id="monthlyTrendChart" viewBox="0 0 640 260" preserveAspectRatio="none"></svg>
+            <div class="line-chart-tooltip" id="monthlyTrendTooltip" hidden></div>
+          </div>
+        </section>
+      </div>
+
+      <div class="dashboard-chart-grid dashboard-chart-grid--secondary">
+        <section class="card chart-card">
+          <div class="card__header">
+            <h2 class="card__title">客户待回款 TOP 5</h2>
+            <span class="chart-card__legend">按待回款金额排序</span>
+          </div>
+          <div class="hbar-chart" id="customerReceivableChart">
+            <div class="chart-empty">加载中...</div>
+          </div>
+        </section>
+
+        <section class="card chart-card countdown-card">
+          <div class="card__header">
+            <h2 class="card__title">预计回款倒计时</h2>
+            <span class="chart-card__legend" id="countdownHint">等待数据...</span>
+          </div>
+          <div class="countdown-grid">
+            <div class="countdown-cell">
+              <span class="countdown-cell__value" id="countdownDays">00</span>
+              <span class="countdown-cell__label">天</span>
+            </div>
+            <div class="countdown-cell">
+              <span class="countdown-cell__value" id="countdownHours">00</span>
+              <span class="countdown-cell__label">时</span>
+            </div>
+            <div class="countdown-cell">
+              <span class="countdown-cell__value" id="countdownMinutes">00</span>
+              <span class="countdown-cell__label">分</span>
+            </div>
+            <div class="countdown-cell">
+              <span class="countdown-cell__value" id="countdownSeconds">00</span>
+              <span class="countdown-cell__label">秒</span>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- 最近销售订单 -->
+      <div class="card" style="margin-bottom:var(--space-lg);">
+        <div class="card__header">
+          <h2 class="card__title">最近销售订单</h2>
+          <div style="display:flex;align-items:center;gap:var(--space-xs);flex-wrap:wrap;">
+            <button class="btn btn--default btn--sm" id="recentOrderSortDirectionBtn" aria-label="切换排序方向">降序</button>
+            <button class="btn btn--default btn--sm" id="recentOrderSortFieldBtn" aria-label="选择排序方式">排序：剩余应回款金额</button>
+            <button class="btn btn--default btn--sm" id="refreshOrdersBtn" aria-label="刷新订单">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                <path d="M12.5 7A5.5 5.5 0 1 1 7 1.5a5.5 5.5 0 0 1 4.5 2.3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                <path d="M12.5 1.5v2.5H10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              刷新
+            </button>
+          </div>
+        </div>
+        <div class="table-wrap" id="ordersTableWrap">
+          <table class="table recent-orders-table" aria-label="最近销售订单">
+            <colgroup>
+              <col style="width:13%">
+              <col style="width:17%">
+              <col style="width:11%">
+              <col style="width:11%">
+              <col style="width:12%">
+              <col style="width:11%">
+              <col style="width:8%">
+              <col style="width:8%">
+              <col style="width:9%">
+            </colgroup>
+            <thead>
+              <tr>
+                <th>订单号</th>
+                <th>客户</th>
+                <th>总金额</th>
+                <th>回款金额</th>
+                <th>剩余应回款</th>
+                <th>回款时间</th>
+                <th>负责人</th>
+                <th>日期</th>
+                <th>状态</th>
+              </tr>
+            </thead>
+            <tbody id="recentOrdersBody">
+              <tr>
+                <td colspan="9">
+                  <div class="empty-state">
+                    <svg class="empty-state__icon" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+                      <rect x="8" y="12" width="48" height="40" rx="4" stroke="currentColor" stroke-width="2.5"/>
+                      <path d="M20 28h24M20 36h16" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                    </svg>
+                    <span class="empty-state__text">暂无数据</span>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div id="ordersPagination"></div>
+      </div>
+
+      <!-- 登录面板 -->
+      <div class="card" id="loginPanel">
+        <div class="card__header">
+          <h2 class="card__title">账号登录</h2>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:var(--space-md);max-width:600px;">
+          <div class="form-item">
+            <label class="form-label form-label--required" for="loginUsername">用户名</label>
+            <input class="form-input" id="loginUsername" type="text" placeholder="请输入用户名" autocomplete="username" />
+            <span class="form-error" id="err-loginUsername"></span>
+          </div>
+          <div class="form-item">
+            <label class="form-label form-label--required" for="loginPassword">密码</label>
+            <input class="form-input" id="loginPassword" type="password" placeholder="请输入密码" autocomplete="current-password" />
+            <span class="form-error" id="err-loginPassword"></span>
+          </div>
+        </div>
+        <div style="display:flex;gap:var(--space-sm);margin-top:var(--space-lg);">
+          <button class="btn btn--primary" id="loginBtn">登录</button>
+          <button class="btn btn--ghost btn--sm" id="panelLogoutBtn">退出登录</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Toast 容器 -->
+  <div class="toast-container" id="toastContainer" aria-live="polite" aria-atomic="false"></div>
+
+  <!-- Modal 容器 -->
+  <div class="modal-overlay" id="modalOverlay" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="modalHeader">
+    <div class="modal" id="modal">
+      <div class="modal__header" id="modalHeader"></div>
+      <div class="modal__body" id="modalBody"></div>
+      <div class="modal__footer" id="modalFooter"></div>
+    </div>
+  </div>
+
+  <script src="./config.js"></script>
+  <script src="./common.js"></script>
+  <script>
+    // ── 初始化 ──────────────────────────────────────────────────
+    initTheme();
+    initSidebar();
+    initNavbar();
+    initMobileDrawer();
+
+    // ── 状态 ────────────────────────────────────────────────────
+    const _state = {
+      ordersPage: 1,
+      ordersPageSize: 10,
+      ordersTotal: 0,
+      orders: [],
+      recentOrderSortBy: "remainingReceivableAmount",
+      recentOrderSortDir: "desc",
+      countdownTimer: null,
+      autoRefreshTimer: null,
+      nextAutoRefreshAt: null,
+      isDashboardLoading: false,
+      amountUnit: localStorage.getItem("cargo_amount_unit") || "yuan",
+      analyticsModel: null,
+    };
+    const RECENT_ORDER_SORT_OPTIONS = [
+      { value: "remainingReceivableAmount", label: "剩余应回款金额" },
+      { value: "receivedDate", label: "回款时间" },
+      { value: "totalAmount", label: "总金额" },
+      { value: "receivedAmount", label: "回款金额" },
+      { value: "orderDate", label: "下单日期" },
+      { value: "createdAt", label: "创建时间" },
+      { value: "customerName", label: "客户" },
+      { value: "status", label: "状态" },
+      { value: "ownerName", label: "负责人" },
+      { value: "orderNo", label: "订单号" },
+    ];
+    const REFRESH_POLICY_KEY = "cargo_refresh_policy";
+    const REFRESH_LAST_AT_KEY = "cargo_refresh_last_at";
+
+    // ── 刷新按钮 ────────────────────────────────────────────────
+    document.getElementById("refreshBtn").addEventListener("click", () => loadDashboard({ source: "manual" }));
+    document.getElementById("refreshOrdersBtn").addEventListener("click", loadRecentOrders);
+    document.getElementById("recentOrderSortFieldBtn").addEventListener("click", openRecentOrderSortFieldModal);
+    document.getElementById("recentOrderSortDirectionBtn").addEventListener("click", toggleRecentOrderSortDirection);
+    document.getElementById("refreshPolicy").addEventListener("change", applyRefreshPolicyVisibility);
+    document.getElementById("saveRefreshPolicyBtn").addEventListener("click", saveRefreshPolicy);
+    document.getElementById("copyInviteCodeBtn").addEventListener("click", copyInviteCode);
+    document.querySelectorAll(".js-amount-unit-select").forEach((select) => {
+      select.addEventListener("change", handleAmountUnitChange);
+    });
+    window.addEventListener("beforeunload", () => {
+      _stopCountdown();
+      _stopAutoRefresh();
+    });
+    updateRecentOrderSortButtons();
+
+    function getRecentOrderSortOption(value) {
+      return RECENT_ORDER_SORT_OPTIONS.find((item) => item.value === value) || RECENT_ORDER_SORT_OPTIONS[0];
+    }
+
+    function updateRecentOrderSortButtons() {
+      const fieldBtn = document.getElementById("recentOrderSortFieldBtn");
+      const directionBtn = document.getElementById("recentOrderSortDirectionBtn");
+      if (fieldBtn) {
+        fieldBtn.textContent = `排序：${getRecentOrderSortOption(_state.recentOrderSortBy).label}`;
+      }
+      if (directionBtn) {
+        directionBtn.textContent = _state.recentOrderSortDir === "asc" ? "升序" : "降序";
+      }
+    }
+
+    function openRecentOrderSortFieldModal() {
+      const optionsHtml = RECENT_ORDER_SORT_OPTIONS.map((item) => `
+        <option value="${item.value}" ${item.value === _state.recentOrderSortBy ? "selected" : ""}>${item.label}</option>
+      `).join("");
+      showModal({
+        title: "选择排序方式",
+        body: `
+          <div class="form-item">
+            <label class="form-label form-label--required" for="recentOrderSortFieldSelect">按以下字段排序</label>
+            <select class="form-select" id="recentOrderSortFieldSelect">${optionsHtml}</select>
+          </div>
+        `,
+        footer: `
+          <button class="btn btn--ghost btn--sm" onclick="closeModal()">取消</button>
+          <button class="btn btn--primary btn--sm" id="saveRecentOrderSortFieldBtn">确定</button>
+        `
+      });
+      const saveBtn = document.getElementById("saveRecentOrderSortFieldBtn");
+      if (saveBtn) {
+        saveBtn.onclick = () => {
+          const nextSortBy = document.getElementById("recentOrderSortFieldSelect")?.value || _state.recentOrderSortBy;
+          if (nextSortBy !== _state.recentOrderSortBy) {
+            _state.recentOrderSortBy = nextSortBy;
+            _state.ordersPage = 1;
+            updateRecentOrderSortButtons();
+            loadRecentOrders();
+          }
+          closeModal();
+        };
+      }
+    }
+
+    function toggleRecentOrderSortDirection() {
+      _state.recentOrderSortDir = _state.recentOrderSortDir === "asc" ? "desc" : "asc";
+      _state.ordersPage = 1;
+      updateRecentOrderSortButtons();
+      loadRecentOrders();
+    }
+
+    // ── 登录面板 ────────────────────────────────────────────────
+    document.getElementById("loginBtn").addEventListener("click", handleLogin);
+    document.getElementById("loginPassword").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") handleLogin();
+    });
+    document.getElementById("panelLogoutBtn").addEventListener("click", () => {
+      clearAuth();
+      showToast("info", "已退出登录");
+      _stopCountdown();
+      updateLoginPanel();
+      document.getElementById("navUsername").textContent = "未登录";
+      const navRole = document.getElementById("navRole");
+      if (navRole) navRole.style.display = "none";
+    });
+
+    async function handleLogin() {
+      const username = document.getElementById("loginUsername").value.trim();
+      const password = document.getElementById("loginPassword").value;
+      clearFieldErrors(["loginUsername", "loginPassword"]);
+
+      if (!username) { showFieldError("loginUsername", "请输入用户名"); return; }
+      if (!password) { showFieldError("loginPassword", "请输入密码"); return; }
+
+      const btn = document.getElementById("loginBtn");
+      btn.disabled = true;
+      btn.textContent = "登录中...";
+
+      try {
+        const res = await request("/auth/login", {
+          method: "POST",
+          body: JSON.stringify({ username, password }),
+        });
+        const token = res.data?.accessToken || res.accessToken || res.token;
+        const user  = res.data?.user || res.user || { username };
+        if (!token) throw new Error("登录响应中未包含 token");
+        setToken(token);
+        setUser({
+          ...user,
+          roles: user.roles || res.data?.roles || res.roles || [],
+          permissions: user.permissions || res.data?.permissions || res.permissions || [],
+        });
+        showToast("success", `欢迎回来，${user.fullName || user.username || username}！`);
+        initNavbar();
+        updateLoginPanel();
+        loadDashboard({ source: "login" });
+      } catch (err) {
+        const msg = (err && (err.message || err.msg)) || "用户名或密码错误";
+        showToast("error", "登录失败：" + msg);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "登录";
+      }
+    }
+
+    function updateLoginPanel() {
+      const panel = document.getElementById("loginPanel");
+      const refreshPolicyCard = document.getElementById("refreshPolicyCard");
+      const token = getToken();
+      if (token) {
+        panel.style.display = "none";
+        if (refreshPolicyCard) refreshPolicyCard.style.display = "";
+        loadRefreshPolicySettings();
+        ensureCompanyInviteCode();
+      } else {
+        _stopCountdown();
+        _stopAutoRefresh();
+        panel.style.display = "";
+        if (refreshPolicyCard) refreshPolicyCard.style.display = "none";
+      }
+    }
+
+    function applyRefreshPolicyVisibility() {
+      const policy = document.getElementById("refreshPolicy")?.value || "1d";
+      const wrap = document.getElementById("customRefreshWrap");
+      if (wrap) wrap.hidden = policy !== "custom";
+      if (policy !== "custom") clearFieldErrors(["customRefreshDays"]);
+    }
+
+    function loadRefreshPolicySettings() {
+      const savedPolicy = _readRefreshPolicy();
+      if (savedPolicy.policy) document.getElementById("refreshPolicy").value = savedPolicy.policy;
+      if (savedPolicy.customDays) document.getElementById("customRefreshDays").value = savedPolicy.customDays;
+      applyRefreshPolicyVisibility();
+      _scheduleAutoRefresh();
+    }
+
+    function saveRefreshPolicy() {
+      clearFieldErrors(["customRefreshDays"]);
+      const policy = document.getElementById("refreshPolicy")?.value || "1d";
+      const customDays = document.getElementById("customRefreshDays")?.value?.trim() || "";
+      if (policy === "custom") {
+        const days = Number(customDays);
+        if (!customDays) {
+          showFieldError("customRefreshDays", "请输入自定义天数");
+          return;
+        }
+        if (!Number.isInteger(days) || days < 1 || days > 365) {
+          showFieldError("customRefreshDays", "自定义天数需在 1 到 365 之间");
+          return;
+        }
+      }
+      localStorage.setItem(REFRESH_POLICY_KEY, JSON.stringify({ policy, customDays }));
+      localStorage.setItem(REFRESH_LAST_AT_KEY, String(Date.now()));
+      _scheduleAutoRefresh();
+      showToast("success", "刷新策略已保存");
+    }
+
+    function _readRefreshPolicy() {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(REFRESH_POLICY_KEY) || "{}");
+        const policy = String(parsed.policy || "1d");
+        const customDays = String(parsed.customDays || "").trim();
+        return { policy, customDays };
+      } catch {
+        return { policy: "1d", customDays: "" };
+      }
+    }
+
+    function _resolveRefreshDays(policy, customDays) {
+      if (policy === "none") return null;
+      if (policy === "1d") return 1;
+      if (policy === "10d") return 10;
+      if (policy === "30d") return 30;
+      if (policy === "custom") {
+        const days = Number(customDays);
+        if (Number.isInteger(days) && days >= 1 && days <= 365) return days;
+        return null;
+      }
+      return 1;
+    }
+
+    function _formatRefreshPolicyLabel(policy, customDays) {
+      if (policy === "1d") return "每 1 天";
+      if (policy === "10d") return "每 10 天";
+      if (policy === "30d") return "每 30 天";
+      if (policy === "none") return "不刷新";
+      if (policy === "custom") return `每 ${customDays || "?"} 天`;
+      return "每 1 天";
+    }
+
+    function _setRefreshHint(text) {
+      const hintEl = document.getElementById("refreshPolicyHint");
+      if (hintEl) hintEl.textContent = text;
+    }
+
+    function _stopAutoRefresh() {
+      if (_state.autoRefreshTimer) {
+        clearInterval(_state.autoRefreshTimer);
+        _state.autoRefreshTimer = null;
+      }
+      _state.nextAutoRefreshAt = null;
+    }
+
+    function _scheduleAutoRefresh() {
+      _stopAutoRefresh();
+
+      if (!getToken()) {
+        _setRefreshHint("登录后将根据策略自动刷新");
+        return;
+      }
+
+      const { policy, customDays } = _readRefreshPolicy();
+      const days = _resolveRefreshDays(policy, customDays);
+      const label = _formatRefreshPolicyLabel(policy, customDays);
+
+      if (!days) {
+        _setRefreshHint(`当前策略：${label}（仅支持手动刷新）`);
+        return;
+      }
+
+      const lastAtRaw = Number(localStorage.getItem(REFRESH_LAST_AT_KEY));
+      const baseAt = Number.isFinite(lastAtRaw) && lastAtRaw > 0 ? lastAtRaw : Date.now();
+      _state.nextAutoRefreshAt = baseAt + days * 24 * 60 * 60 * 1000;
+      _setRefreshHint(`当前策略：${label}，下次自动刷新：${_formatDateTime(new Date(_state.nextAutoRefreshAt))}`);
+
+      const tick = async () => {
+        if (!getToken()) {
+          _stopAutoRefresh();
+          return;
+        }
+        if (_state.isDashboardLoading) return;
+        if (!_state.nextAutoRefreshAt) return;
+        if (Date.now() < _state.nextAutoRefreshAt) return;
+        await loadDashboard({ source: "auto" });
+      };
+
+      tick();
+      _state.autoRefreshTimer = setInterval(tick, 30000);
+    }
+
+    function renderCompanyInviteCode(code) {
+      const codeEl = document.getElementById("companyInviteCodeText");
+      const copyBtn = document.getElementById("copyInviteCodeBtn");
+      const inviteCode = String(code || "").trim();
+      if (!codeEl || !copyBtn) return;
+      if (inviteCode) {
+        codeEl.textContent = inviteCode;
+        copyBtn.disabled = false;
+      } else {
+        codeEl.textContent = "当前账号无可见邀请码";
+        copyBtn.disabled = true;
+      }
+    }
+
+    async function ensureCompanyInviteCode() {
+      const user = getUser();
+      if (user?.companyInviteCode) {
+        renderCompanyInviteCode(user.companyInviteCode);
+        return;
+      }
+      try {
+        const res = await request("/auth/me");
+        const me = res?.data || {};
+        const existing = getUser();
+        setUser({
+          ...existing,
+          ...me,
+          roles: me.roles || existing.roles || [],
+          permissions: me.permissions || existing.permissions || [],
+        });
+        renderCompanyInviteCode(me.companyInviteCode);
+      } catch {
+        renderCompanyInviteCode("");
+      }
+    }
+
+    async function copyInviteCode() {
+      const code = document.getElementById("companyInviteCodeText")?.textContent?.trim() || "";
+      if (!code || code === "当前账号无可见邀请码" || code === "加载中...") return;
+      try {
+        await navigator.clipboard.writeText(code);
+        showToast("success", "邀请码已复制");
+      } catch {
+        showToast("error", "复制失败，请手动复制");
+      }
+    }
+
+    // ── 仪表盘数据加载 ──────────────────────────────────────────
+    async function loadDashboard(options = {}) {
+      if (!getToken()) return;
+      if (_state.isDashboardLoading) return;
+      _state.isDashboardLoading = true;
+      _showSummarySkeleton();
+      try {
+        await Promise.all([loadKpiData(), loadAnalyticsData(), loadRecentOrders()]);
+      } catch (err) {
+        console.error("dashboard load failed", err);
+        showToast("error", "仪表盘数据加载失败");
+      } finally {
+        _state.isDashboardLoading = false;
+        localStorage.setItem(REFRESH_LAST_AT_KEY, String(Date.now()));
+        _scheduleAutoRefresh();
+        if (options.source === "auto") {
+          showToast("info", "已按刷新策略自动刷新");
+        }
+      }
+    }
+
+    async function loadKpiData() {
+      // 显示骨架屏
+      _showKpiSkeleton();
+
+      try {
+        const [customersRes, productsRes, ordersRes, balancesRes] = await Promise.allSettled([
+          request("/customers?page=1&pageSize=1"),
+          request("/products"),
+          request("/sales-orders?page=1&pageSize=1"),
+          request("/inventory/balances?page=1&pageSize=200"),
+        ]);
+
+        // 客户数
+        const customerTotal = _extractTotal(customersRes);
+        _setKpiValue("kpiCustomers", customerTotal !== null ? String(customerTotal) : "—");
+        _setKpiSub("kpiCustomersSub", customerTotal !== null ? "活跃客户" : "加载失败");
+
+        // 商品数
+        const productTotal = _extractTotal(productsRes);
+        _setKpiValue("kpiProducts", productTotal !== null ? String(productTotal) : "—");
+        _setKpiSub("kpiProductsSub", productTotal !== null ? "在售商品" : "加载失败");
+
+        // 销售单数
+        const orderTotal = _extractTotal(ordersRes);
+        _setKpiValue("kpiOrders", orderTotal !== null ? String(orderTotal) : "—");
+        _setKpiSub("kpiOrdersSub", orderTotal !== null ? "累计订单" : "加载失败");
+
+        // 库存预警（可用数量 <= 0 的条目）
+        let alertCount = 0;
+        if (balancesRes.status === "fulfilled") {
+          const balances = balancesRes.value?.data?.list || balancesRes.value?.data || [];
+          alertCount = Array.isArray(balances)
+            ? balances.filter((b) => (b.availableQty ?? b.available ?? 0) <= 0).length
+            : 0;
+        }
+        _setKpiValue("kpiAlerts", String(alertCount));
+        _setKpiSub("kpiAlertsSub", alertCount > 0 ? "需关注" : "库存正常");
+      } catch (err) {
+        showToast("error", "KPI 数据加载失败");
+      }
+    }
+
+    async function loadAnalyticsData() {
+      const [ordersRes, invoicesRes, receiptsRes, requestsRes, customersRes] = await Promise.allSettled([
+        request("/sales-orders?page=1&pageSize=200"),
+        request("/invoices?page=1&pageSize=200"),
+        request("/receipts?page=1&pageSize=200"),
+        request("/payment-requests?page=1&pageSize=200"),
+        request("/customers?page=1&pageSize=200"),
+      ]);
+
+      const orders = _extractList(ordersRes);
+      const invoices = _extractList(invoicesRes);
+      const receipts = _extractList(receiptsRes);
+      const paymentRequests = _extractList(requestsRes);
+      const customers = _extractList(customersRes);
+
+      const totalSales = orders.reduce((sum, order) => sum + _resolveOrderAmount(order), 0);
+      const totalReceived = receipts.reduce((sum, receipt) => sum + _toNumber(receipt.amount ?? receipt.receivedAmount ?? receipt.totalAmount), 0);
+      const totalInvoiced = invoices.reduce((sum, invoice) => sum + _toNumber(invoice.totalAmount ?? invoice.amount), 0);
+      const pendingAmount = Math.max((totalInvoiced || totalSales) - totalReceived, 0);
+
+      const statusMap = new Map([
+        ["DRAFT", "草稿"],
+        ["CONFIRMED", "已确认"],
+        ["COMPLETED", "已完成"],
+        ["CANCELLED", "已取消"],
+      ]);
+      const statusCounter = new Map();
+      orders.forEach((order) => {
+        const key = String(order.status || "").toUpperCase() || "UNKNOWN";
+        statusCounter.set(key, (statusCounter.get(key) || 0) + 1);
+      });
+      const statusSeries = Array.from(statusMap.entries()).map(([key, label]) => ({
+        label,
+        value: statusCounter.get(key) || 0,
+      }));
+
+      const monthKeys = _getRecentMonths(6);
+      const salesSeries = _buildMonthSeries(orders, monthKeys, (order) => order.orderDate || order.createdAt, _resolveOrderAmount);
+      const receiptSeries = _buildMonthSeries(receipts, monthKeys, (receipt) => receipt.receivedDate || receipt.createdAt, (receipt) => _toNumber(receipt.amount ?? receipt.receivedAmount ?? receipt.totalAmount));
+
+      const customerReceivable = _buildCustomerReceivable(customers, orders, invoices, receipts).slice(0, 5);
+
+      const countdownTarget = _pickCountdownTarget(paymentRequests, invoices);
+      _state.analyticsModel = {
+        totalSales,
+        totalReceived,
+        pendingAmount,
+        orderCount: orders.length,
+        receiptCount: receipts.length,
+        statusSeries,
+        monthLabels: monthKeys.map((key) => key.slice(5).replace("-", "月")),
+        salesSeries,
+        receiptSeries,
+        customerReceivable,
+        countdownTarget,
+      };
+      renderAnalyticsPanels();
+    }
+
+    function _showSummarySkeleton() {
+      ["summaryTotalSales", "summaryTotalReceived", "summaryPendingAmount"].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.style.removeProperty("--value-scale");
+          el.innerHTML = '<span class="skeleton skeleton--title" style="display:inline-block;width:120px;"></span>';
+        }
+      });
+      ["summaryTotalSalesSub", "summaryTotalReceivedSub", "summaryPendingAmountSub"].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = '<span class="skeleton skeleton--text" style="display:inline-block;width:150px;"></span>';
+      });
+    }
+
+    function _showKpiSkeleton() {
+      ["kpiCustomers", "kpiProducts", "kpiOrders", "kpiAlerts"].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = '<span class="skeleton skeleton--title" style="display:inline-block;width:60px;"></span>';
+      });
+      ["kpiCustomersSub", "kpiProductsSub", "kpiOrdersSub", "kpiAlertsSub"].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = '<span class="skeleton skeleton--text" style="display:inline-block;width:80px;"></span>';
+      });
+    }
+
+    function _setKpiValue(id, text) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = text;
+    }
+
+    function _setKpiSub(id, text) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = text;
+    }
+
+    function _extractTotal(settled) {
+      if (settled.status !== "fulfilled") return null;
+      const res = settled.value;
+      const total = res?.data?.total ?? res?.total;
+      if (typeof total === "number") return total;
+      const list = res?.data?.list ?? res?.data;
+      if (Array.isArray(list)) return list.length;
+      return null;
+    }
+
+    function _extractList(settled) {
+      if (settled.status !== "fulfilled") return [];
+      const res = settled.value;
+      const list = res?.data?.list ?? res?.data ?? [];
+      return Array.isArray(list) ? list : [];
+    }
+
+    function _toNumber(value) {
+      const num = Number(value);
+      return Number.isFinite(num) ? num : 0;
+    }
+
+    function _resolveOrderAmount(order) {
+      const directAmount = _toNumber(order.totalAmount ?? order.amount ?? order.orderAmount);
+      if (directAmount > 0) return directAmount;
+      const items = Array.isArray(order.items) ? order.items : [];
+      return items.reduce((sum, item) => {
+        const lineAmount = _toNumber(item.lineAmount ?? item.totalAmount);
+        if (lineAmount > 0) return sum + lineAmount;
+        const qty = _toNumber(item.orderedQty ?? item.qty ?? item.quantity ?? item.deliveredQty);
+        const unitPrice = _toNumber(item.unitPrice ?? item.price);
+        return sum + qty * unitPrice;
+      }, 0);
+    }
+
+    function _formatAmount(value) {
+      const amount = Math.max(0, _toNumber(value));
+      const unitMeta = _getAmountUnitMeta();
+      return new Intl.NumberFormat("zh-CN", {
+        minimumFractionDigits: unitMeta.decimals,
+        maximumFractionDigits: unitMeta.decimals,
+      }).format(amount / unitMeta.divisor);
+    }
+
+    function _formatAmountWithUnit(value) {
+      return `${_formatAmount(value)}${_getAmountUnitMeta().label}`;
+    }
+
+    function _getAmountUnitMeta() {
+      const unitMap = {
+        yuan: { label: "元", divisor: 1, decimals: 0 },
+        wan: { label: "万元", divisor: 10000, decimals: 2 },
+        million: { label: "百万元", divisor: 1000000, decimals: 2 },
+      };
+      return unitMap[_state.amountUnit] || unitMap.yuan;
+    }
+
+    function _setSummaryMetric(id, value) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const text = _formatAmountWithUnit(value);
+      el.textContent = text;
+      el.style.setProperty("--value-scale", String(_getSummaryValueScale(text)));
+    }
+
+    function _getSummaryValueScale(displayText) {
+      const unitScale = {
+        yuan: 1,
+        wan: 1.1,
+        million: 1.18,
+      }[_state.amountUnit] || 1;
+      const compactLength = String(displayText || "").replace(/[,\.\s]/g, "").length;
+      if (compactLength >= 12) return Math.max(0.72, unitScale * 0.72);
+      if (compactLength >= 10) return Math.max(0.78, unitScale * 0.82);
+      if (compactLength >= 8) return Math.max(0.86, unitScale * 0.9);
+      return unitScale;
+    }
+
+    function _setSummarySub(id, text) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = text;
+    }
+
+    function handleAmountUnitChange(event) {
+      _state.amountUnit = event.target.value;
+      localStorage.setItem("cargo_amount_unit", _state.amountUnit);
+      renderAnalyticsPanels();
+      renderOrdersTable(_state.orders);
+    }
+
+    function renderAnalyticsPanels() {
+      const model = _state.analyticsModel;
+      if (!model) return;
+
+      document.querySelectorAll(".js-amount-unit-select").forEach((select) => {
+        if (select.value !== _state.amountUnit) {
+          select.value = _state.amountUnit;
+        }
+      });
+
+      _setSummaryMetric("summaryTotalSales", model.totalSales);
+      _setSummarySub("summaryTotalSalesSub", `累计订单 ${model.orderCount} 单`);
+      _setSummaryMetric("summaryTotalReceived", model.totalReceived);
+      _setSummarySub("summaryTotalReceivedSub", `累计回款 ${model.receiptCount} 笔`);
+      _setSummaryMetric("summaryPendingAmount", model.pendingAmount);
+      _setSummarySub("summaryPendingAmountSub", model.pendingAmount > 0 ? "当前仍有待回款订单" : "当前无待回款金额");
+
+      renderStatusChart(model.statusSeries);
+      renderMonthlyTrendChart(model.monthLabels, model.salesSeries, model.receiptSeries);
+      renderCustomerReceivableChart(model.customerReceivable);
+      _startCountdown(model.countdownTarget.targetAt, model.countdownTarget.hint);
+
+      const trendUnitLegend = document.getElementById("trendUnitLegend");
+      if (trendUnitLegend) {
+        trendUnitLegend.textContent = `单位：${_getAmountUnitMeta().label}`;
+      }
+    }
+
+    function renderStatusChart(series) {
+      const chart = document.getElementById("statusChart");
+      if (!chart) return;
+      if (!Array.isArray(series) || !series.length || series.every((item) => !item.value)) {
+        chart.innerHTML = '<div class="chart-empty">暂无订单状态数据</div>';
+        return;
+      }
+      const maxValue = Math.max(...series.map((item) => _toNumber(item.value)), 1);
+      chart.innerHTML = series
+        .map((item) => {
+          const value = _toNumber(item.value);
+          const heightPercent = Math.max((value / maxValue) * 100, 3);
+          return `
+            <div class="vbar-chart__item">
+              <div class="vbar-chart__bar-wrap">
+                <span class="vbar-chart__value">${value}</span>
+                <span class="vbar-chart__bar" style="height:${heightPercent}%"></span>
+              </div>
+              <span class="vbar-chart__label">${_esc(item.label)}</span>
+            </div>
+          `;
+        })
+        .join("");
+    }
+
+    function _getRecentMonths(count) {
+      const now = new Date();
+      const keys = [];
+      for (let i = count - 1; i >= 0; i -= 1) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        keys.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+      }
+      return keys;
+    }
+
+    function _toMonthKey(value) {
+      if (!value) return "";
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return "";
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+    }
+
+    function _buildMonthSeries(list, months, dateGetter, valueGetter) {
+      const map = new Map(months.map((month) => [month, 0]));
+      list.forEach((item) => {
+        const monthKey = _toMonthKey(dateGetter(item));
+        if (!monthKey || !map.has(monthKey)) return;
+        map.set(monthKey, map.get(monthKey) + _toNumber(valueGetter(item)));
+      });
+      return months.map((month) => map.get(month) || 0);
+    }
+
+    function renderMonthlyTrendChart(labels, salesSeries, receiptSeries) {
+      const svg = document.getElementById("monthlyTrendChart");
+      if (!svg) return;
+      const tooltip = document.getElementById("monthlyTrendTooltip");
+      if (!Array.isArray(labels) || !labels.length) {
+        svg.innerHTML = "";
+        if (tooltip) tooltip.hidden = true;
+        return;
+      }
+
+      const width = 640;
+      const height = 260;
+      const padding = { top: 18, right: 18, bottom: 34, left: 50 };
+      const chartWidth = width - padding.left - padding.right;
+      const chartHeight = height - padding.top - padding.bottom;
+      const maxValue = Math.max(...salesSeries, ...receiptSeries, 1);
+      const tickCount = 4;
+      const xStep = labels.length > 1 ? chartWidth / (labels.length - 1) : 0;
+      const isDarkTheme = document.documentElement.getAttribute("data-theme") === "dark";
+      const axisTextColor = isDarkTheme ? "rgba(255,255,255,0.74)" : "#5f7392";
+
+      const xAt = (index) => padding.left + index * xStep;
+      const yAt = (value) => padding.top + chartHeight - (value / maxValue) * chartHeight;
+      const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+
+      const toPath = (series) => series.map((value, index) => `${index === 0 ? "M" : "L"} ${xAt(index).toFixed(2)} ${yAt(value).toFixed(2)}`).join(" ");
+      const toArea = (series) => {
+        if (!series.length) return "";
+        const firstX = xAt(0).toFixed(2);
+        const lastX = xAt(series.length - 1).toFixed(2);
+        const baseY = (padding.top + chartHeight).toFixed(2);
+        return `${toPath(series)} L ${lastX} ${baseY} L ${firstX} ${baseY} Z`;
+      };
+
+      const grid = Array.from({ length: tickCount + 1 }, (_, index) => {
+        const value = (maxValue / tickCount) * index;
+        const y = yAt(value);
+        return `
+          <line x1="${padding.left}" y1="${y.toFixed(2)}" x2="${(padding.left + chartWidth).toFixed(2)}" y2="${y.toFixed(2)}" stroke="rgba(22,119,255,0.12)" stroke-width="1" />
+          <text x="${(padding.left - 8).toFixed(2)}" y="${(y + 4).toFixed(2)}" text-anchor="end" fill="${axisTextColor}" font-size="12" font-weight="600">${_formatAmount(value)}</text>
+        `;
+      }).join("");
+
+      const xLabels = labels.map((label, index) => `
+        <text x="${xAt(index).toFixed(2)}" y="${(height - 10).toFixed(2)}" text-anchor="middle" fill="${axisTextColor}" font-size="12" font-weight="600">${_esc(label)}</text>
+      `).join("");
+
+      const salesDots = salesSeries.map((value, index) => `<circle cx="${xAt(index).toFixed(2)}" cy="${yAt(value).toFixed(2)}" r="3.2" fill="#1677ff"/>`).join("");
+      const receiptDots = receiptSeries.map((value, index) => `<circle cx="${xAt(index).toFixed(2)}" cy="${yAt(value).toFixed(2)}" r="3.2" fill="#13c2c2"/>`).join("");
+
+      svg.innerHTML = `
+        <defs>
+          <linearGradient id="salesAreaGradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(22,119,255,0.26)" />
+            <stop offset="100%" stop-color="rgba(22,119,255,0.02)" />
+          </linearGradient>
+          <linearGradient id="receiptAreaGradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(19,194,194,0.22)" />
+            <stop offset="100%" stop-color="rgba(19,194,194,0.02)" />
+          </linearGradient>
+        </defs>
+        ${grid}
+        <path d="${toArea(salesSeries)}" fill="url(#salesAreaGradient)"></path>
+        <path d="${toArea(receiptSeries)}" fill="url(#receiptAreaGradient)"></path>
+        <path d="${toPath(salesSeries)}" fill="none" stroke="#1677ff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path>
+        <path d="${toPath(receiptSeries)}" fill="none" stroke="#13c2c2" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path>
+        ${salesDots}
+        ${receiptDots}
+        <line id="trendHoverLine" x1="0" y1="${padding.top}" x2="0" y2="${(padding.top + chartHeight).toFixed(2)}" stroke="rgba(22,119,255,0.32)" stroke-width="1" stroke-dasharray="3 3" visibility="hidden"></line>
+        <circle id="trendHoverSalesDot" cx="0" cy="0" r="4.4" fill="#1677ff" stroke="#ffffff" stroke-width="1.6" visibility="hidden"></circle>
+        <circle id="trendHoverReceiptDot" cx="0" cy="0" r="4.4" fill="#13c2c2" stroke="#ffffff" stroke-width="1.6" visibility="hidden"></circle>
+        <rect id="monthlyTrendHoverLayer" x="${padding.left}" y="${padding.top}" width="${chartWidth}" height="${chartHeight}" fill="transparent" style="cursor:crosshair"></rect>
+        ${xLabels}
+      `;
+
+      const wrap = svg.closest(".line-chart-wrap");
+      const hoverLayer = document.getElementById("monthlyTrendHoverLayer");
+      const hoverLine = document.getElementById("trendHoverLine");
+      const hoverSalesDot = document.getElementById("trendHoverSalesDot");
+      const hoverReceiptDot = document.getElementById("trendHoverReceiptDot");
+      if (!wrap || !tooltip || !hoverLayer || !hoverLine || !hoverSalesDot || !hoverReceiptDot) return;
+      tooltip.hidden = true;
+
+      const showTooltipAt = (index) => {
+        const safeIndex = clamp(index, 0, labels.length - 1);
+        const salesValue = _toNumber(salesSeries[safeIndex]);
+        const receiptValue = _toNumber(receiptSeries[safeIndex]);
+        const pointX = xAt(safeIndex);
+        const salesY = yAt(salesValue);
+        const receiptY = yAt(receiptValue);
+        const topY = Math.min(salesY, receiptY);
+
+        hoverLine.setAttribute("x1", pointX.toFixed(2));
+        hoverLine.setAttribute("x2", pointX.toFixed(2));
+        hoverLine.setAttribute("visibility", "visible");
+        hoverSalesDot.setAttribute("cx", pointX.toFixed(2));
+        hoverSalesDot.setAttribute("cy", salesY.toFixed(2));
+        hoverSalesDot.setAttribute("visibility", "visible");
+        hoverReceiptDot.setAttribute("cx", pointX.toFixed(2));
+        hoverReceiptDot.setAttribute("cy", receiptY.toFixed(2));
+        hoverReceiptDot.setAttribute("visibility", "visible");
+
+        tooltip.innerHTML = `
+          <div class="line-chart-tooltip__title">${_esc(labels[safeIndex])}</div>
+          <div class="line-chart-tooltip__row"><span class="line-chart-tooltip__dot line-chart-tooltip__dot--sales"></span>销售：${_esc(_formatAmountWithUnit(salesValue))}</div>
+          <div class="line-chart-tooltip__row"><span class="line-chart-tooltip__dot line-chart-tooltip__dot--receipt"></span>回款：${_esc(_formatAmountWithUnit(receiptValue))}</div>
+        `;
+        tooltip.hidden = false;
+
+        const xPx = (pointX / width) * svg.clientWidth;
+        const yPx = (topY / height) * svg.clientHeight;
+        const tipRect = tooltip.getBoundingClientRect();
+        const left = clamp(xPx + 12, 8, wrap.clientWidth - tipRect.width - 8);
+        const top = yPx - tipRect.height - 10 < 8 ? yPx + 10 : yPx - tipRect.height - 10;
+        tooltip.style.left = `${left}px`;
+        tooltip.style.top = `${top}px`;
+      };
+
+      const hideTooltip = () => {
+        tooltip.hidden = true;
+        hoverLine.setAttribute("visibility", "hidden");
+        hoverSalesDot.setAttribute("visibility", "hidden");
+        hoverReceiptDot.setAttribute("visibility", "hidden");
+      };
+
+      hoverLayer.addEventListener("mousemove", (event) => {
+        const rect = svg.getBoundingClientRect();
+        if (!rect.width) return;
+        const xInSvg = ((event.clientX - rect.left) / rect.width) * width;
+        const index = Math.round((xInSvg - padding.left) / Math.max(xStep, 1));
+        showTooltipAt(index);
+      });
+      hoverLayer.addEventListener("mouseleave", hideTooltip);
+      hoverLayer.addEventListener("touchstart", (event) => {
+        const touch = event.touches?.[0];
+        if (!touch) return;
+        const rect = svg.getBoundingClientRect();
+        const xInSvg = ((touch.clientX - rect.left) / rect.width) * width;
+        const index = Math.round((xInSvg - padding.left) / Math.max(xStep, 1));
+        showTooltipAt(index);
+      }, { passive: true });
+      hoverLayer.addEventListener("touchend", hideTooltip, { passive: true });
+    }
+
+    function _buildCustomerReceivable(customers, orders, invoices, receipts) {
+      const customerNameById = new Map();
+      customers.forEach((customer) => {
+        customerNameById.set(String(customer.id), customer.name || customer.customerName || customer.customerCode || customer.id);
+      });
+
+      const invoiceAmountByCustomer = new Map();
+      invoices.forEach((invoice) => {
+        const customerId = String(invoice.customerId || invoice.customer?.id || "");
+        if (!customerId) return;
+        customerNameById.set(customerId, invoice.customerName || customerNameById.get(customerId) || customerId);
+        invoiceAmountByCustomer.set(customerId, (invoiceAmountByCustomer.get(customerId) || 0) + _toNumber(invoice.totalAmount ?? invoice.amount));
+      });
+
+      if (!invoiceAmountByCustomer.size) {
+        orders.forEach((order) => {
+          const customerId = String(order.customerId || order.customer?.id || "");
+          if (!customerId) return;
+          customerNameById.set(customerId, order.customerName || customerNameById.get(customerId) || customerId);
+          invoiceAmountByCustomer.set(customerId, (invoiceAmountByCustomer.get(customerId) || 0) + _resolveOrderAmount(order));
+        });
+      }
+
+      const receiptAmountByCustomer = new Map();
+      receipts.forEach((receipt) => {
+        const customerId = String(receipt.customerId || receipt.customer?.id || "");
+        if (!customerId) return;
+        customerNameById.set(customerId, receipt.customerName || customerNameById.get(customerId) || customerId);
+        receiptAmountByCustomer.set(customerId, (receiptAmountByCustomer.get(customerId) || 0) + _toNumber(receipt.amount ?? receipt.receivedAmount));
+      });
+
+      const customerIds = new Set([...invoiceAmountByCustomer.keys(), ...receiptAmountByCustomer.keys()]);
+      return Array.from(customerIds).map((customerId) => {
+        const pending = Math.max((invoiceAmountByCustomer.get(customerId) || 0) - (receiptAmountByCustomer.get(customerId) || 0), 0);
+        return {
+          customerId,
+          name: customerNameById.get(customerId) || customerId,
+          pending,
+        };
+      }).sort((a, b) => b.pending - a.pending);
+    }
+
+    function renderCustomerReceivableChart(series) {
+      const chart = document.getElementById("customerReceivableChart");
+      if (!chart) return;
+      if (!Array.isArray(series) || !series.length || series.every((item) => item.pending <= 0)) {
+        chart.innerHTML = '<div class="chart-empty">暂无待回款客户数据</div>';
+        return;
+      }
+      const maxValue = Math.max(...series.map((item) => _toNumber(item.pending)), 1);
+      chart.innerHTML = series.map((item) => {
+        const percent = Math.max((_toNumber(item.pending) / maxValue) * 100, 2);
+        return `
+          <div class="hbar-chart__row">
+            <span class="hbar-chart__label" title="${_esc(item.name)}">${_esc(item.name)}</span>
+            <span class="hbar-chart__track"><span class="hbar-chart__fill" style="width:${percent.toFixed(2)}%"></span></span>
+            <span class="hbar-chart__metric">
+              <strong class="hbar-chart__value">${_formatAmount(item.pending)}</strong>
+              <span class="hbar-chart__unit">${_getAmountUnitMeta().label}</span>
+            </span>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function _pickCountdownTarget(paymentRequests, invoices) {
+      const now = Date.now();
+      const candidates = [];
+
+      paymentRequests
+        .filter((item) => ["SUBMITTED", "APPROVED"].includes(String(item.status || "").toUpperCase()) && item.requestDate)
+        .forEach((item) => {
+          const base = new Date(item.requestDate);
+          if (Number.isNaN(base.getTime())) return;
+          candidates.push({
+            targetAt: new Date(base.getTime() + 7 * 24 * 60 * 60 * 1000),
+            hint: "按请款单预计回款时间",
+          });
+        });
+
+      invoices
+        .filter((item) => ["ISSUED", "POSTED", ""].includes(String(item.status || "").toUpperCase()) && item.invoiceDate)
+        .forEach((item) => {
+          const base = new Date(item.invoiceDate);
+          if (Number.isNaN(base.getTime())) return;
+          candidates.push({
+            targetAt: new Date(base.getTime() + 15 * 24 * 60 * 60 * 1000),
+            hint: "按发票预计回款时间",
+          });
+        });
+
+      const futureTarget = candidates
+        .filter((item) => item.targetAt.getTime() > now)
+        .sort((a, b) => a.targetAt - b.targetAt)[0];
+
+      if (futureTarget) return futureTarget;
+
+      return {
+        targetAt: new Date(now + 3 * 24 * 60 * 60 * 1000),
+        hint: candidates.length ? "暂无未来回款节点，展示默认窗口" : "默认预计回款窗口",
+      };
+    }
+
+    function _startCountdown(targetAt, hint) {
+      _stopCountdown();
+      const hintEl = document.getElementById("countdownHint");
+      if (hintEl) hintEl.textContent = `${hint} · 截止 ${_formatDateTime(targetAt)}`;
+
+      const tick = () => {
+        const diff = Math.max(0, targetAt.getTime() - Date.now());
+        const totalSeconds = Math.floor(diff / 1000);
+        const days = Math.floor(totalSeconds / 86400);
+        const hours = Math.floor((totalSeconds % 86400) / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+        _setCountdownPart("countdownDays", days);
+        _setCountdownPart("countdownHours", hours);
+        _setCountdownPart("countdownMinutes", minutes);
+        _setCountdownPart("countdownSeconds", seconds);
+      };
+
+      tick();
+      _state.countdownTimer = setInterval(tick, 1000);
+    }
+
+    function _stopCountdown() {
+      if (_state.countdownTimer) {
+        clearInterval(_state.countdownTimer);
+        _state.countdownTimer = null;
+      }
+    }
+
+    function _setCountdownPart(id, value) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = String(Math.max(0, value)).padStart(2, "0");
+    }
+
+    function _formatDateTime(date) {
+      if (!(date instanceof Date) || Number.isNaN(date.getTime())) return "未知时间";
+      const yyyy = date.getFullYear();
+      const mm = String(date.getMonth() + 1).padStart(2, "0");
+      const dd = String(date.getDate()).padStart(2, "0");
+      const hh = String(date.getHours()).padStart(2, "0");
+      const mi = String(date.getMinutes()).padStart(2, "0");
+      return `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
+    }
+
+    // ── 最近订单表格 ────────────────────────────────────────────
+    async function loadRecentOrders() {
+      if (!getToken()) return;
+      const wrap = document.getElementById("ordersTableWrap");
+      // 显示加载遮罩
+      const loadingEl = document.createElement("div");
+      loadingEl.className = "table__loading";
+      loadingEl.innerHTML = '<span style="color:var(--color-text-secondary);font-size:13px;">加载中...</span>';
+      wrap.style.position = "relative";
+      wrap.appendChild(loadingEl);
+
+      try {
+        const query = new URLSearchParams({
+          page: String(_state.ordersPage),
+          pageSize: String(_state.ordersPageSize),
+          sortBy: _state.recentOrderSortBy,
+          sortDir: _state.recentOrderSortDir
+        });
+        const res = await request(`/sales-orders?${query.toString()}`);
+        const list  = res?.data?.list  || res?.data  || [];
+        const total = res?.data?.total || res?.total || 0;
+        _state.orders      = list;
+        _state.ordersTotal = total;
+        renderOrdersTable(list);
+        renderPagination("ordersPagination", total, _state.ordersPage, _state.ordersPageSize, (page, size) => {
+          _state.ordersPage     = page;
+          _state.ordersPageSize = size;
+          loadRecentOrders();
+        });
+      } catch (err) {
+        renderOrdersTable([]);
+        showToast("error", "订单数据加载失败");
+      } finally {
+        loadingEl.remove();
+      }
+    }
+
+    function renderOrdersTable(list) {
+      const tbody = document.getElementById("recentOrdersBody");
+      if (!list || !list.length) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="9">
+              <div class="empty-state">
+                <svg class="empty-state__icon" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+                  <rect x="8" y="12" width="48" height="40" rx="4" stroke="currentColor" stroke-width="2.5"/>
+                  <path d="M20 28h24M20 36h16" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+                <span class="empty-state__text">暂无数据</span>
+              </div>
+            </td>
+          </tr>`;
+        return;
+      }
+      tbody.innerHTML = list.map((o) => `
+        <tr class="table__row--clickable" data-order-id="${_esc(o.id || "")}" title="点击查看订单详情">
+          <td title="${_esc(o.orderNo || "-")}"><span class="table__cell-link">${_esc(o.orderNo || "—")}</span></td>
+          <td title="${_esc(o.customerName || "-")}">${_esc(o.customerName || "—")}</td>
+          <td data-col="amount">${_esc(_formatAmount(o.totalAmount))}</td>
+          <td data-col="received">${_esc(_formatAmount(o.receivedAmount))}</td>
+          <td data-col="remaining">${_esc(_formatAmount(o.remainingReceivableAmount))}</td>
+          <td data-col="receivedDate">${_esc((o.receivedDate || "").slice(0, 10) || "—")}</td>
+          <td data-col="owner" title="${_esc(o.ownerName || "-")}">${_esc(o.ownerName || "—")}</td>
+          <td data-col="date">${_esc((o.orderDate || "").slice(0, 10) || "—")}</td>
+          <td data-col="status">${renderBadge(o.status)}</td>
+        </tr>`).join("");
+
+      tbody.querySelectorAll("tr[data-order-id]").forEach((row) => {
+        row.addEventListener("click", () => {
+          const orderId = row.getAttribute("data-order-id");
+          if (orderId) openRecentOrderDetail(orderId);
+        });
+      });
+    }
+
+    async function openRecentOrderDetail(id) {
+      const orderId = String(id || "").trim();
+      if (!orderId) return;
+      try {
+        const res = await request(`/sales-orders/${encodeURIComponent(orderId)}`);
+        const detail = res?.data || res || {};
+        showOrderReceiptModal(
+          { ...detail, items: Array.isArray(detail.items) ? detail.items : [] },
+          {
+            purpose: `销售货款（订单号：${detail.orderNo || orderId}）`,
+          }
+        );
+      } catch (err) {
+        showToast("error", "加载收据失败");
+      }
+    }
+
+    function _esc(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    // ── 页面初始化 ──────────────────────────────────────────────
+    document.querySelectorAll(".js-amount-unit-select").forEach((select) => {
+      select.value = _state.amountUnit;
+    });
+    updateLoginPanel();
+    if (getToken()) {
+      loadDashboard({ source: "init" });
+    }
+  </script>
+</body>
+</html>

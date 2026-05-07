@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>统一登录 - Cargo 货物系统</title>
+  <link rel="stylesheet" href="./common.css" />
+</head>
+<body data-require-auth="false">
+  <main class="layout-main auth-shell">
+    <section class="auth-frame">
+      <aside class="auth-visual">
+        <div class="auth-visual__overlay">
+          <div class="auth-visual__stage" aria-hidden="true">
+            <div class="auth-visual__system-title">货物管理系统</div>
+            <div class="auth-globe" data-globe>
+              <canvas class="auth-globe__canvas" aria-hidden="true"></canvas>
+            </div>
+          </div>
+          <span class="auth-visual__eyebrow">企业登录</span>
+          <h1 class="auth-visual__title">货物管理系统</h1>
+          <p class="auth-visual__desc">请输入手机号、密码、身份与所属公司后登录系统。</p>
+        </div>
+      </aside>
+      <section class="card auth-card">
+        <div class="auth-panel auth-panel--wide">
+          <div class="auth-card__top">
+            <div class="auth-brand">
+              <span class="auth-brand__mark">C</span>
+              <div>
+                <div class="auth-brand__title">Cargo 货物系统</div>
+                <p class="auth-brand__subtitle">企业账号登录</p>
+              </div>
+            </div>
+            <nav class="auth-switch" aria-label="认证页面切换">
+              <a class="auth-switch__link active" href="./login.html" aria-current="page">登录</a>
+              <a class="auth-switch__link" href="./register.html">注册</a>
+            </nav>
+            <div>
+              <div class="auth-card__eyebrow">登录</div>
+              <h2 class="auth-heading">欢迎登录</h2>
+              <p class="auth-intro">填写账号信息后即可进入系统。</p>
+              <div class="auth-inline-alert" id="loginInlineAlert" role="status" aria-live="polite"></div>
+            </div>
+          </div>
+
+          <div class="auth-form auth-form--register">
+            <div class="auth-form__grid">
+              <div class="form-item">
+                <label class="form-label form-label--required" for="username">手机号账号</label>
+                <input class="form-input" id="username" autocomplete="username" inputmode="numeric" maxlength="11" placeholder="请输入 11 位手机号" />
+                <span class="form-error" id="err-username"></span>
+              </div>
+              <div class="form-item">
+                <label class="form-label form-label--required" for="password">密码</label>
+                <div class="input-with-action">
+                  <input class="form-input" id="password" type="password" autocomplete="current-password" placeholder="字母+数字，长度大于 6" />
+                  <button class="input-action" type="button" data-toggle-target="password" data-toggle-label="密码" aria-label="显示密码" aria-pressed="false">显示</button>
+                </div>
+                <span class="form-error" id="err-password"></span>
+              </div>
+            </div>
+
+            <div class="auth-form__grid">
+              <div class="form-item">
+                <label class="form-label form-label--required" for="loginRole">登录身份</label>
+                <select class="form-select" id="loginRole">
+                  <option value="EMPLOYEE" selected>员工</option>
+                  <option value="OWNER">老板</option>
+                </select>
+                <span class="form-error" id="err-loginRole"></span>
+              </div>
+              <div class="form-item">
+                <label class="form-label form-label--required" for="companyName">所属/管理公司</label>
+                <input class="form-input" id="companyName" list="companySuggestions" autocomplete="organization" placeholder="请输入公司名（如 DGUT）" />
+                <datalist id="companySuggestions">
+                  <option value="DGUT"></option>
+                </datalist>
+                <span class="form-error" id="err-companyName"></span>
+              </div>
+            </div>
+
+            <button class="btn btn--primary auth-submit" id="loginBtn" type="button">登录系统</button>
+          </div>
+
+          <div class="auth-links">
+            <a href="./register.html">没有账号？去注册</a>
+          </div>
+          <p class="auth-note">请在可信设备登录，离开工位前及时退出账号。</p>
+        </div>
+      </section>
+    </section>
+  </main>
+  <div class="toast-container" id="toastContainer"></div>
+  <script src="./config.js"></script>
+  <script src="./common.js"></script>
+  <script src="./globe-visual.js"></script>
+  <script>
+    const LOGIN_FIELDS = ["username", "password", "companyName", "loginRole"];
+
+    function isPhone(value) {
+      return /^\d{11}$/.test(value);
+    }
+
+    function isStrongPassword(value) {
+      return /^(?=.*[A-Za-z])(?=.*\d).{7,}$/.test(value);
+    }
+
+    function restoreRecentCompany() {
+      try {
+        const latest = localStorage.getItem("cargo_last_company_name");
+        if (latest) document.getElementById("companyName").value = latest;
+      } catch {}
+    }
+
+    function clearLoginInlineAlert() {
+      const alertEl = document.getElementById("loginInlineAlert");
+      if (!alertEl) return;
+      alertEl.textContent = "";
+      alertEl.className = "auth-inline-alert";
+    }
+
+    function showLoginInlineAlert(message, type = "error") {
+      const alertEl = document.getElementById("loginInlineAlert");
+      if (!alertEl) return;
+      alertEl.textContent = message;
+      alertEl.className = `auth-inline-alert is-visible is-${type}`;
+    }
+
+    initTheme();
+    initInputToggles();
+    if (getToken()) window.location.href = "./index.html";
+    restoreRecentCompany();
+
+    document.getElementById("loginBtn").onclick = async () => {
+      clearLoginInlineAlert();
+      clearFieldErrors(LOGIN_FIELDS);
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value;
+      const companyName = document.getElementById("companyName").value.trim();
+      const loginRole = document.getElementById("loginRole").value;
+
+      if (!username) showFieldError("username", "请输入手机号");
+      if (username && !isPhone(username)) showFieldError("username", "手机号必须为 11 位数字");
+      if (!password) showFieldError("password", "请输入密码");
+      if (password && !isStrongPassword(password)) showFieldError("password", "密码需为字母+数字，且长度大于 6");
+      if (!companyName) showFieldError("companyName", "请选择或输入所属公司");
+      if (!loginRole) showFieldError("loginRole", "请选择登录身份");
+
+      const hasError = LOGIN_FIELDS.some((fieldId) => {
+        const errEl = document.getElementById(`err-${fieldId}`);
+        return !!(errEl && errEl.textContent);
+      });
+      if (hasError) {
+        showLoginInlineAlert("请先修正输入内容后再登录");
+        return;
+      }
+
+      try {
+        const res = await request("/auth/login", {
+          method: "POST",
+          body: JSON.stringify({ username, password, companyName, loginRole }),
+        });
+        setToken(res.data?.accessToken || "");
+        const user = res.data?.user || {};
+        setUser({
+          ...user,
+          selectedLoginRole: loginRole,
+          roles: user.roles || res.data?.roles || [],
+          permissions: user.permissions || res.data?.permissions || [],
+        });
+        localStorage.setItem("cargo_last_company_name", companyName);
+        clearLoginInlineAlert();
+        showToast("success", "登录成功");
+        setTimeout(() => { window.location.href = "./index.html"; }, 250);
+      } catch (err) {
+        const msg = getErrorMessage(err).toLowerCase();
+        if (msg.includes("invalid account or password") || msg.includes("invalid username or password")) {
+          showFieldError("password", "手机号或密码错误");
+          showLoginInlineAlert("登录失败：手机号或密码错误");
+          return;
+        }
+        if (msg.includes("company")) {
+          showFieldError("companyName", "公司信息不匹配该账号");
+          showLoginInlineAlert("登录失败：公司信息与账号不匹配");
+          return;
+        }
+        if (msg.includes("selected login role")) {
+          showFieldError("loginRole", "该账号不支持当前登录身份");
+          showLoginInlineAlert("登录失败：该账号不支持当前登录身份");
+          return;
+        }
+        showLoginInlineAlert("登录失败：" + getErrorMessage(err));
+      }
+    };
+
+    ["username", "password", "companyName", "loginRole"].forEach((id) => {
+      const input = document.getElementById(id);
+      if (!input) return;
+      input.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") document.getElementById("loginBtn").click();
+      });
+    });
+  </script>
+</body>
+</html>

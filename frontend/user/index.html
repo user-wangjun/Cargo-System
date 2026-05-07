@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>财务看板 - Cargo 用户端</title>
+  <link rel="stylesheet" href="./common.css" />
+</head>
+<body>
+  <header class="nav-bar"><div class="nav-bar__left"><button class="nav-bar__hamburger" id="hamburgerBtn">☰</button><a class="nav-bar__logo" href="./index.html"><span class="nav-bar__logo-text">Cargo 用户端</span></a></div><div class="nav-bar__right"><button class="nav-bar__theme-btn" id="themeBtn">🌙</button><span class="nav-bar__user"><span class="nav-bar__username" id="navUsername">未登录</span><span class="badge badge--blue nav-bar__role" id="navRole" style="display:none;"></span></span><button class="btn btn--ghost btn--sm" id="logoutBtn">退出</button></div></header>
+  <aside class="layout-sidebar" id="sidebar"><nav class="sidebar__nav"><a class="sidebar__item active" href="./index.html"><span class="sidebar__label">财务看板</span></a><a class="sidebar__item" href="./invoices.html"><span class="sidebar__label">发票管理</span></a><a class="sidebar__item" href="./requests.html" data-perm-any="finance.edit,finance.approve"><span class="sidebar__label">请款管理</span></a><a class="sidebar__item" href="./receipts.html" data-perm-any="finance.edit"><span class="sidebar__label">回款记录</span></a></nav></aside>
+  <div class="drawer-overlay" id="drawerOverlay"></div>
+  <main class="layout-main">
+    <nav class="breadcrumb"><span class="breadcrumb__item breadcrumb__item--active">财务看板</span></nav>
+    <div class="page-content">
+      <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);">
+        <div class="kpi-card" data-color="blue"><div class="kpi-card__icon-wrap">📄</div><div class="kpi-card__body"><div class="kpi-card__label">发票数</div><div class="kpi-card__value" id="kpiInv"><span class="skeleton skeleton--title" style="display:inline-block;width:60px;"></span></div></div></div>
+        <div class="kpi-card" data-color="orange"><div class="kpi-card__icon-wrap">💳</div><div class="kpi-card__body"><div class="kpi-card__label">请款单数</div><div class="kpi-card__value" id="kpiReq"><span class="skeleton skeleton--title" style="display:inline-block;width:60px;"></span></div></div></div>
+        <div class="kpi-card" data-color="green"><div class="kpi-card__icon-wrap">💰</div><div class="kpi-card__body"><div class="kpi-card__label">回款数</div><div class="kpi-card__value" id="kpiRec"><span class="skeleton skeleton--title" style="display:inline-block;width:60px;"></span></div></div></div>
+      </div>
+      <div class="card">
+        <div class="card__header"><h2 class="card__title">最近发票</h2><button class="btn btn--default btn--sm" onclick="loadDashboard()">刷新</button></div>
+        <div class="table-wrap"><table class="table"><thead><tr><th>发票号</th><th>客户</th><th>金额</th><th>状态</th></tr></thead><tbody id="invoiceBody"></tbody></table></div>
+      </div>
+    </div>
+  </main>
+  <div class="toast-container" id="toastContainer"></div>
+  <div class="modal-overlay" id="modalOverlay" style="display:none;"><div class="modal"><div class="modal__header" id="modalHeader"></div><div class="modal__body" id="modalBody"></div><div class="modal__footer" id="modalFooter"></div></div></div>
+  <script src="./config.js"></script>
+  <script src="./common.js"></script>
+  <script>
+    initTheme(); initSidebar(); initNavbar(); initMobileDrawer();
+    async function loadDashboard(){
+      try{
+        const [i,p,r] = await Promise.all([request("/invoices?page=1&pageSize=200"), request("/payment-requests?page=1&pageSize=200"), request("/receipts?page=1&pageSize=200")]);
+        const invoices = i?.data?.list || i?.data || [];
+        const requests = p?.data?.list || p?.data || [];
+        const receipts = r?.data?.list || r?.data || [];
+        document.getElementById("kpiInv").textContent = String(invoices.length);
+        document.getElementById("kpiReq").textContent = String(requests.length);
+        document.getElementById("kpiRec").textContent = String(receipts.length);
+        document.getElementById("invoiceBody").innerHTML = invoices.length ? invoices.slice(0,10).map((x)=>`<tr><td>${_escHtml(x.invoiceNo||"-")}</td><td>${_escHtml(x.customerName||"-")}</td><td>${x.totalAmount||0}</td><td>${renderBadge(x.status)}</td></tr>`).join("") : '<tr><td colspan="4"><div class="empty-state"><span class="empty-state__text">暂无数据</span></div></td></tr>';
+      }catch(err){ showToast("error","看板加载失败："+(err?.message||"未知错误")); }
+    }
+    loadDashboard();
+  </script>
+</body>
+</html>
+

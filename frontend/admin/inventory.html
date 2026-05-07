@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>库存管理 - Cargo 管理系统</title>
+  <link rel="stylesheet" href="./common.css" />
+  <style>
+    .page-content .tab { font-size:13px; font-weight:600; padding:6px 10px; min-height:34px; }
+    .page-content .form-label { font-size:13px; font-weight:600; }
+    .page-content .form-input,
+    .page-content .form-select { height:34px; font-size:13px; padding:5px 9px; }
+    .page-content .filter-bar .btn.btn--sm { min-height:34px; font-size:13px; padding:0 9px; }
+    .page-content .table th { font-size:14px; font-weight:600; padding-top:9px; padding-bottom:9px; }
+    .page-content .table td { font-size:12px; height:42px; }
+    .page-content .badge { font-size:12px; padding:1px 6px; }
+    .page-content .pagination__total,
+    .page-content .pagination__btn,
+    .page-content .pagination__size-select { font-size:12px; min-height:30px; }
+    @media(max-width:1200px){
+      .page-content .tab { font-size:13px; min-height:32px; }
+      .page-content .form-label { font-size:11px; }
+      .page-content .form-input,
+      .page-content .form-select { height:32px; font-size:11px; }
+      .page-content .filter-bar .btn.btn--sm { min-height:32px; font-size:11px; }
+      .page-content .table th,
+      .page-content .table td { font-size:12px; }
+      .page-content .pagination__total,
+      .page-content .pagination__btn,
+      .page-content .pagination__size-select { font-size:11px; min-height:26px; }
+    }
+    .items-table{width:100%;border-collapse:collapse;font-size:13px}
+    .items-table th,.items-table td{padding:8px;border-bottom:1px solid var(--color-border-secondary)}
+    .items-table th{background:var(--color-bg-base);color:var(--color-text-secondary);font-weight:500}
+    #modalOverlay .modal{
+      width:min(96vw,1120px);
+      max-width:1120px;
+    }
+
+    /* 仅放大库存页弹窗字体（采购收货单/送货单等） */
+    #modalOverlay .modal__header{
+      min-height:68px;
+      font-size:24px;
+      font-weight:700;
+    }
+    #modalOverlay .modal__body .form-label{
+      font-size:18px;
+      font-weight:600;
+    }
+    #modalOverlay .modal__body .form-input,
+    #modalOverlay .modal__body .form-select{
+      height:46px;
+      font-size:18px;
+      padding:8px 12px;
+    }
+    #modalOverlay .modal__body .form-error{
+      font-size:16px;
+    }
+    #modalOverlay .modal__body strong{
+      font-size:20px;
+    }
+    #modalOverlay .items-table{
+      font-size:16px;
+    }
+    #modalOverlay .items-table th,
+    #modalOverlay .items-table td{
+      padding:10px 8px;
+    }
+    #modalOverlay .items-table th:first-child,
+    #modalOverlay .items-table td:first-child{
+      min-width:360px;
+    }
+    #modalOverlay .modal__body .btn.btn--sm,
+    #modalOverlay .modal__footer .btn.btn--sm{
+      min-height:40px;
+      font-size:16px;
+      padding:0 14px;
+    }
+  </style>
+</head>
+<body>
+  <header class="nav-bar" id="navbar">
+    <div class="nav-bar__left">
+      <button class="nav-bar__hamburger" id="hamburgerBtn" aria-label="菜单">☰</button>
+      <a class="nav-bar__logo" href="./index.html"><span class="nav-bar__logo-text">Cargo 管理系统</span></a>
+    </div>
+    <div class="nav-bar__right">
+      <button class="nav-bar__theme-btn" id="themeBtn" aria-label="切换主题">🌙</button>
+      <span class="nav-bar__user"><span class="nav-bar__username" id="navUsername">未登录</span><span class="badge badge--blue nav-bar__role" id="navRole" style="display:none;"></span></span>
+      <button class="btn btn--ghost btn--sm" id="logoutBtn">退出</button>
+    </div>
+  </header>
+
+  <aside class="layout-sidebar" id="sidebar">
+    <nav class="sidebar__nav">
+      <a class="sidebar__item" href="./index.html" data-tooltip="总览仪表盘">
+        <svg class="sidebar__icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 8L8 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M8 8L11 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="8" cy="8" r="1" fill="currentColor"/></svg>
+        <span class="sidebar__label">总览仪表盘</span>
+      </a>
+      <a class="sidebar__item" href="./orders.html" data-tooltip="销售管理">
+        <svg class="sidebar__icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2 2h1.5l1.8 7.5h7l1.2-5H5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7" cy="13" r="1" fill="currentColor"/><circle cx="11" cy="13" r="1" fill="currentColor"/></svg>
+        <span class="sidebar__label">销售管理</span>
+      </a>
+      <a class="sidebar__item active" href="./inventory.html" data-tooltip="库存管理">
+        <svg class="sidebar__icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="1.5" y="7" width="13" height="7.5" rx="1" stroke="currentColor" stroke-width="1.5"/><path d="M1.5 7l6.5-5.5L14.5 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="5.5" y="10" width="5" height="4.5" rx="0.5" stroke="currentColor" stroke-width="1.2"/></svg>
+        <span class="sidebar__label">库存管理</span>
+      </a>
+      <a class="sidebar__item" href="./finance.html" data-tooltip="财务管理">
+        <svg class="sidebar__icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="1.5" y="2.5" width="13" height="11" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M1.5 6h13" stroke="currentColor" stroke-width="1.5"/><path d="M5 9.5h2M9 9.5h2M5 12h2M9 12h2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        <span class="sidebar__label">财务管理</span>
+      </a>
+      <a class="sidebar__item" href="./users.html" data-perm-any="user.manage" data-tooltip="员工权限">
+        <svg class="sidebar__icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="6" cy="5" r="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M1.5 13.5c0-2.485 2.015-4.5 4.5-4.5s4.5 2.015 4.5 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M11 7.5c1.105 0 2 .895 2 2M13 4.5c.828 0 1.5.672 1.5 1.5S13.828 7.5 13 7.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        <span class="sidebar__label">员工权限</span>
+      </a>
+    </nav>
+  </aside>
+  <div class="drawer-overlay" id="drawerOverlay"></div>
+
+  <main class="layout-main">
+    <nav class="breadcrumb"><a class="breadcrumb__item" href="./index.html">首页</a><span class="breadcrumb__sep">/</span><span class="breadcrumb__item breadcrumb__item--active">库存管理</span></nav>
+    <div class="page-content">
+      <div class="tabs">
+        <button class="tab active" id="tab-purchase-btn" onclick="switchTab('purchase')">采购收货单</button>
+        <button class="tab" id="tab-delivery-btn" onclick="switchTab('delivery')">送货单</button>
+        <button class="tab" id="tab-warehouse-btn" onclick="switchTab('warehouse')">仓库管理</button>
+        <button class="tab" id="tab-balance-btn" onclick="switchTab('balance')">库存余额</button>
+        <button class="tab" id="tab-ledger-btn" onclick="switchTab('ledger')">库存台账</button>
+      </div>
+
+      <section class="tab-panel active" id="tab-purchase">
+        <div class="filter-bar">
+          <div class="form-item"><label class="form-label">供应商</label><input class="form-input" id="purchaseSupplierFilter" /></div>
+          <div class="form-item"><label class="form-label">日期从</label><input class="form-input" id="purchaseDateFrom" type="date" /></div>
+          <div class="form-item"><label class="form-label">日期至</label><input class="form-input" id="purchaseDateTo" type="date" /></div>
+          <div class="filter-bar__actions">
+            <button class="btn btn--primary btn--sm" onclick="renderPurchaseList()">查询</button>
+            <button class="btn btn--default btn--sm" onclick="resetPurchaseFilter()">重置</button>
+            <button class="btn btn--default btn--sm" data-perm-any="inventory.edit" onclick="triggerPurchaseImport()">导入Excel</button>
+            <button class="btn btn--default btn--sm" data-perm-any="inventory.edit" onclick="openPurchaseModal()">新建收货单</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="table"><thead><tr><th>收货单号</th><th>供应商</th><th>交货日期</th><th>状态</th><th>操作</th></tr></thead><tbody id="purchaseBody"></tbody></table>
+        </div>
+        <div id="purchasePagination"></div>
+      </section>
+
+      <section class="tab-panel" id="tab-delivery">
+        <div class="filter-bar">
+          <div class="form-item"><label class="form-label">客户</label><input class="form-input" id="deliveryCustomerFilter" /></div>
+          <div class="form-item"><label class="form-label">日期从</label><input class="form-input" id="deliveryDateFrom" type="date" /></div>
+          <div class="form-item"><label class="form-label">日期至</label><input class="form-input" id="deliveryDateTo" type="date" /></div>
+          <div class="filter-bar__actions">
+            <button class="btn btn--primary btn--sm" onclick="renderDeliveryList()">查询</button>
+            <button class="btn btn--default btn--sm" onclick="resetDeliveryFilter()">重置</button>
+            <button class="btn btn--default btn--sm" data-perm-any="inventory.edit" onclick="openDeliveryModal()">新建送货单</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="table"><thead><tr><th>送货单号</th><th>客户</th><th>出货日期</th><th>状态</th><th>操作</th></tr></thead><tbody id="deliveryBody"></tbody></table>
+        </div>
+        <div id="deliveryPagination"></div>
+      </section>
+
+      <section class="tab-panel" id="tab-warehouse">
+        <div class="filter-bar">
+          <div class="form-item"><label class="form-label">关键字</label><input class="form-input" id="warehouseKeyword" placeholder="仓库编码/名称" /></div>
+          <div class="filter-bar__actions">
+            <button class="btn btn--primary btn--sm" onclick="renderWarehouseList()">查询</button>
+            <button class="btn btn--default btn--sm" onclick="resetWarehouseFilter()">重置</button>
+            <button class="btn btn--default btn--sm" data-perm-any="master.edit" onclick="openWarehouseModal()">新建仓库</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="table"><thead><tr><th>仓库编码</th><th>仓库名称</th><th>操作</th></tr></thead><tbody id="warehouseBody"></tbody></table>
+        </div>
+        <div id="warehousePagination"></div>
+      </section>
+
+      <section class="tab-panel" id="tab-balance">
+        <div class="table-wrap">
+          <table class="table"><thead><tr><th>仓库</th><th>商品</th><th>现存数量</th><th>可用数量</th><th>更新时间</th></tr></thead><tbody id="balanceBody"></tbody></table>
+        </div>
+      </section>
+
+      <section class="tab-panel" id="tab-ledger">
+        <div class="table-wrap">
+          <table class="table"><thead><tr><th>时间</th><th>业务类型</th><th>单号</th><th>商品</th><th>变动数量</th><th>结存数量</th></tr></thead><tbody id="ledgerBody"></tbody></table>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <div class="toast-container" id="toastContainer"></div>
+  <div class="modal-overlay" id="modalOverlay" style="display:none;"><div class="modal"><div class="modal__header" id="modalHeader"></div><div class="modal__body" id="modalBody"></div><div class="modal__footer" id="modalFooter"></div></div></div>
+  <div id="printArea" class="print-area" style="display:none;"></div>
+  <input id="purchaseImportFile" type="file" accept=".xlsx,.xls" style="display:none;" />
+
+  <script src="./config.js"></script>
+  <script src="./common.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="./inventory.js"></script>
+</body>
+</html>
+
+

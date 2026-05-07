@@ -1,0 +1,1039 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>销售管理 - Cargo 管理系统</title>
+  <link rel="stylesheet" href="./common.css" />
+  <style>
+    .page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-lg); }
+    .page-title  { font-size:18px; font-weight:600; color:var(--color-text-primary); }
+    .form-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:var(--space-md); }
+    .form-grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:var(--space-md); }
+    .page-content .tab { font-size:13px; font-weight:600; padding:6px 10px; min-height:34px; }
+    .page-content .form-label { font-size:13px; font-weight:600; }
+    .page-content .form-input,
+    .page-content .form-select { height:34px; font-size:13px; padding:5px 9px; }
+    .page-content .filter-bar .btn.btn--sm { min-height:34px; font-size:13px; padding:0 9px; }
+    .page-content #newCustomerBtn,
+    .page-content #newProductBtn,
+    .page-content #newOrderBtn { min-height:34px; font-size:13px; padding:0 9px; }
+    .page-content .table th { font-size:14px; font-weight:600; padding-top:9px; padding-bottom:9px; }
+    .page-content .table td { font-size:12px; height:42px; }
+    .page-content .badge { font-size:12px; padding:1px 6px; }
+    .page-content .pagination__total,
+    .page-content .pagination__btn,
+    .page-content .pagination__size-select { font-size:12px; min-height:30px; }
+    @media(max-width:640px){ .form-grid-2,.form-grid-3{ grid-template-columns:1fr; } }
+    @media(max-width:1200px){
+      .page-content .tab { font-size:13px; min-height:32px; }
+      .page-content .form-label { font-size:11px; }
+      .page-content .form-input,
+      .page-content .form-select { height:32px; font-size:11px; }
+      .page-content .filter-bar .btn.btn--sm,
+      .page-content #newCustomerBtn,
+      .page-content #newProductBtn,
+      .page-content #newOrderBtn { min-height:32px; font-size:11px; }
+      .page-content .table th,
+      .page-content .table td { font-size:12px; }
+      .page-content .pagination__total,
+      .page-content .pagination__btn,
+      .page-content .pagination__size-select { font-size:11px; min-height:26px; }
+    }
+    .items-table { width:100%; border-collapse:collapse; font-size:12px; margin-top:var(--space-sm); }
+    .items-table th { background:var(--color-bg-base); color:var(--color-text-secondary); padding:8px 10px; text-align:left; border-bottom:1px solid var(--color-border-secondary); }
+    .items-table td { padding:6px 10px; border-bottom:1px solid var(--color-border-secondary); vertical-align:middle; }
+    .items-table .form-input,.items-table .form-select { height:28px; font-size:12px; }
+  </style>
+</head>
+<body>
+
+  <!-- 顶部导航栏 -->
+  <header class="nav-bar" id="navbar">
+    <div class="nav-bar__left">
+      <button class="nav-bar__hamburger" id="hamburgerBtn" aria-label="菜单">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+          <rect x="2" y="4" width="14" height="1.5" rx="0.75" fill="currentColor"/>
+          <rect x="2" y="8.25" width="14" height="1.5" rx="0.75" fill="currentColor"/>
+          <rect x="2" y="12.5" width="14" height="1.5" rx="0.75" fill="currentColor"/>
+        </svg>
+      </button>
+      <a class="nav-bar__logo" href="./index.html">
+        <span class="nav-bar__logo-icon" aria-hidden="true" style="font-size:20px;">📦</span>
+        <span class="nav-bar__logo-text">Cargo 管理系统</span>
+      </a>
+    </div>
+    <div class="nav-bar__right">
+      <button class="nav-bar__theme-btn" id="themeBtn" aria-label="切换主题">🌙</button>
+      <span class="nav-bar__user">
+        <span class="nav-bar__username" id="navUsername">未登录</span>
+        <span class="badge badge--blue nav-bar__role" id="navRole" style="display:none;"></span>
+      </span>
+      <button class="btn btn--ghost btn--sm" id="logoutBtn">退出</button>
+    </div>
+  </header>
+
+  <!-- 侧边菜单 -->
+  <aside class="layout-sidebar" id="sidebar">
+    <nav class="sidebar__nav" role="navigation" aria-label="主导航">
+      <a class="sidebar__item" href="./index.html" data-tooltip="总览仪表盘">
+        <svg class="sidebar__icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M8 8L8 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M8 8L11 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <circle cx="8" cy="8" r="1" fill="currentColor"/>
+        </svg>
+        <span class="sidebar__label">总览仪表盘</span>
+      </a>
+      <a class="sidebar__item active" href="./orders.html" data-tooltip="销售管理">
+        <svg class="sidebar__icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M2 2h1.5l1.8 7.5h7l1.2-5H5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="7" cy="13" r="1" fill="currentColor"/>
+          <circle cx="11" cy="13" r="1" fill="currentColor"/>
+        </svg>
+        <span class="sidebar__label">销售管理</span>
+      </a>
+      <a class="sidebar__item" href="./inventory.html" data-tooltip="库存管理">
+        <svg class="sidebar__icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <rect x="1.5" y="7" width="13" height="7.5" rx="1" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M1.5 7l6.5-5.5L14.5 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <rect x="5.5" y="10" width="5" height="4.5" rx="0.5" stroke="currentColor" stroke-width="1.2"/>
+        </svg>
+        <span class="sidebar__label">库存管理</span>
+      </a>
+      <a class="sidebar__item" href="./finance.html" data-tooltip="财务管理">
+        <svg class="sidebar__icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <rect x="1.5" y="2.5" width="13" height="11" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M1.5 6h13" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M5 9.5h2M9 9.5h2M5 12h2M9 12h2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>
+        <span class="sidebar__label">财务管理</span>
+      </a>
+      <a class="sidebar__item" href="./users.html" data-perm-any="user.manage" data-tooltip="员工权限">
+        <svg class="sidebar__icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <circle cx="6" cy="5" r="2.5" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M1.5 13.5c0-2.485 2.015-4.5 4.5-4.5s4.5 2.015 4.5 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M11 7.5c1.105 0 2 .895 2 2M13 4.5c.828 0 1.5.672 1.5 1.5S13.828 7.5 13 7.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+        </svg>
+        <span class="sidebar__label">员工权限</span>
+      </a>
+    </nav>
+  </aside>
+
+  <!-- 移动端遮罩 -->
+  <div class="drawer-overlay" id="drawerOverlay"></div>
+
+  <!-- 主内容区 -->
+  <main class="layout-main" id="layoutMain">
+    <!-- 面包屑 -->
+    <nav class="breadcrumb" aria-label="面包屑导航">
+      <a class="breadcrumb__item" href="./index.html">首页</a>
+      <span class="breadcrumb__sep" aria-hidden="true">/</span>
+      <span class="breadcrumb__item breadcrumb__item--active">销售管理</span>
+    </nav>
+
+    <div class="page-content">
+      <!-- Tab 导航 -->
+      <div class="tabs" role="tablist" aria-label="销售管理">
+        <button class="tab active" role="tab" aria-selected="true" aria-controls="panel-customers" id="tab-customers" onclick="switchTab('customers')">客户主数据</button>
+        <button class="tab" role="tab" aria-selected="false" aria-controls="panel-products" id="tab-products" onclick="switchTab('products')">商品主数据</button>
+        <button class="tab" role="tab" aria-selected="false" aria-controls="panel-orders" id="tab-orders" onclick="switchTab('orders')">销售订单</button>
+      </div>
+
+      <!-- ===== Tab 1: 客户主数据 ===== -->
+      <div class="tab-panel active" id="panel-customers" role="tabpanel" aria-labelledby="tab-customers">
+        <!-- 筛选工具栏 -->
+        <div class="filter-bar">
+          <div class="form-item">
+            <label class="form-label" for="filterCustomerName">客户名称</label>
+            <input class="form-input" id="filterCustomerName" type="text" placeholder="搜索客户名称" style="width:200px;" />
+          </div>
+          <div class="filter-bar__actions">
+            <button class="btn btn--primary btn--sm" onclick="applyCustomerFilter()">查询</button>
+            <button class="btn btn--default btn--sm" onclick="resetCustomerFilter()">重置</button>
+          </div>
+        </div>
+        <!-- 操作区 -->
+        <div style="display:flex;justify-content:flex-end;margin-bottom:var(--space-md);" data-perm-any="master.edit">
+          <button class="btn btn--primary" id="newCustomerBtn" onclick="openCustomerModal(null)">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            新建客户
+          </button>
+        </div>
+        <!-- 表格 -->
+        <div class="table-wrap" id="customersTableWrap">
+          <table class="table" aria-label="客户列表">
+            <thead>
+              <tr>
+                <th>编码</th>
+                <th>名称</th>
+                <th>联系人</th>
+                <th>电话</th>
+                <th>地址</th>
+                <th>状态</th>
+                <th data-perm-any="master.edit">操作</th>
+              </tr>
+            </thead>
+            <tbody id="customersBody">
+              <tr><td colspan="7"><div class="empty-state"><span class="empty-state__text">暂无数据</span></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div id="customersPagination"></div>
+      </div>
+
+      <!-- ===== Tab 2: 商品主数据 ===== -->
+      <div class="tab-panel" id="panel-products" role="tabpanel" aria-labelledby="tab-products">
+        <!-- 筛选工具栏 -->
+        <div class="filter-bar">
+          <div class="form-item">
+            <label class="form-label" for="filterProductName">商品名称</label>
+            <input class="form-input" id="filterProductName" type="text" placeholder="搜索商品名称" style="width:160px;" />
+          </div>
+          <div class="form-item">
+            <label class="form-label" for="filterProductSpec">规格</label>
+            <input class="form-input" id="filterProductSpec" type="text" placeholder="规格" style="width:120px;" />
+          </div>
+          <div class="form-item">
+            <label class="form-label" for="filterProductColor">颜色</label>
+            <input class="form-input" id="filterProductColor" type="text" placeholder="颜色" style="width:120px;" />
+          </div>
+          <div class="filter-bar__actions">
+            <button class="btn btn--primary btn--sm" onclick="applyProductFilter()">查询</button>
+            <button class="btn btn--default btn--sm" onclick="resetProductFilter()">重置</button>
+          </div>
+        </div>
+        <!-- 操作区 -->
+        <div style="display:flex;justify-content:flex-end;margin-bottom:var(--space-md);" data-perm-any="master.edit">
+          <button class="btn btn--primary" id="newProductBtn" onclick="openProductModal(null)">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            新建商品
+          </button>
+        </div>
+        <!-- 表格 -->
+        <div class="table-wrap" id="productsTableWrap">
+          <table class="table" aria-label="商品列表">
+            <thead>
+              <tr>
+                <th>编码</th>
+                <th>名称</th>
+                <th>规格</th>
+                <th>颜色</th>
+                <th>基础单位</th>
+                <th data-perm-any="master.edit">操作</th>
+              </tr>
+            </thead>
+            <tbody id="productsBody">
+              <tr><td colspan="6"><div class="empty-state"><span class="empty-state__text">暂无数据</span></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div id="productsPagination"></div>
+      </div>
+
+      <!-- ===== Tab 3: 销售订单 ===== -->
+      <div class="tab-panel" id="panel-orders" role="tabpanel" aria-labelledby="tab-orders">
+        <!-- 筛选工具栏 -->
+        <div class="filter-bar">
+          <div class="form-item">
+            <label class="form-label" for="filterOrderCustomer">客户名称</label>
+            <input class="form-input" id="filterOrderCustomer" type="text" placeholder="搜索客户名称" style="width:160px;" />
+          </div>
+          <div class="form-item">
+            <label class="form-label" for="filterOrderStatus">状态</label>
+            <select class="form-select" id="filterOrderStatus" style="width:130px;">
+              <option value="">全部状态</option>
+              <option value="DRAFT">草稿</option>
+              <option value="CONFIRMED">已确认</option>
+              <option value="COMPLETED">已完成</option>
+              <option value="CANCELLED">已取消</option>
+            </select>
+          </div>
+          <div class="form-item">
+            <label class="form-label" for="filterOrderDateFrom">下单日期从</label>
+            <input class="form-input" id="filterOrderDateFrom" type="date" style="width:150px;" />
+          </div>
+          <div class="form-item">
+            <label class="form-label" for="filterOrderDateTo">至</label>
+            <input class="form-input" id="filterOrderDateTo" type="date" style="width:150px;" />
+          </div>
+          <div class="filter-bar__actions">
+            <button class="btn btn--primary btn--sm" onclick="applyOrderFilter()">查询</button>
+            <button class="btn btn--default btn--sm" onclick="resetOrderFilter()">重置</button>
+          </div>
+        </div>
+        <!-- 操作区 -->
+        <div style="display:flex;justify-content:flex-end;margin-bottom:var(--space-md);" data-perm-any="order.create">
+          <button class="btn btn--primary" id="newOrderBtn" onclick="openOrderModal()">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            新建订单
+          </button>
+        </div>
+        <!-- 表格 -->
+        <div class="table-wrap" id="ordersTableWrap">
+          <table class="table" aria-label="销售订单列表">
+            <thead>
+              <tr>
+                <th>订单号</th>
+                <th>客户</th>
+                <th>下单日期</th>
+                <th>状态</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="ordersBody">
+              <tr><td colspan="5"><div class="empty-state"><span class="empty-state__text">暂无数据</span></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div id="ordersPagination"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Toast 容器 -->
+  <div class="toast-container" id="toastContainer" aria-live="polite" aria-atomic="false"></div>
+
+  <!-- Modal 容器 -->
+  <div class="modal-overlay" id="modalOverlay" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="modalHeader">
+    <div class="modal" id="modal">
+      <div class="modal__header" id="modalHeader"></div>
+      <div class="modal__body" id="modalBody"></div>
+      <div class="modal__footer" id="modalFooter"></div>
+    </div>
+  </div>
+
+  <script src="./config.js"></script>
+  <script src="./common.js"></script>
+  <script>
+    initTheme();
+    initSidebar();
+    initNavbar();
+    initMobileDrawer();
+
+    const state = {
+      activeTab: "customers",
+      customers: [],
+      products: [],
+      orders: [],
+      customerFilter: { name: "" },
+      productFilter: { name: "", spec: "", color: "" },
+      orderFilter: { customer: "", status: "", dateFrom: "", dateTo: "" },
+      customerSort: { field: null, direction: null },
+      productSort: { field: null, direction: null },
+      orderSort: { field: null, direction: null },
+      customerPage: 1,
+      productPage: 1,
+      orderPage: 1,
+      pageSize: 10,
+      editingCustomer: null,
+      editingProduct: null,
+      orderItems: [],
+    };
+
+    const ORDER_STATUSES = ["DRAFT", "CONFIRMED", "COMPLETED", "CANCELLED"];
+    const DELETED_PRODUCT_IDS_KEY = "cargo_admin_deleted_product_ids";
+
+    function getDeletedProductIds() {
+      try {
+        const raw = localStorage.getItem(DELETED_PRODUCT_IDS_KEY);
+        const arr = raw ? JSON.parse(raw) : [];
+        return new Set(Array.isArray(arr) ? arr.map((x) => String(x)) : []);
+      } catch (_err) {
+        return new Set();
+      }
+    }
+
+    function saveDeletedProductIds(ids) {
+      localStorage.setItem(DELETED_PRODUCT_IDS_KEY, JSON.stringify(Array.from(ids)));
+    }
+
+    function esc(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function fmtDate(v) {
+      return v ? String(v).slice(0, 10) : "-";
+    }
+
+    function getList(res) {
+      return res?.data?.list || res?.data?.items || res?.data || [];
+    }
+
+    function switchTab(name) {
+      state.activeTab = name;
+      document.querySelectorAll(".tab").forEach((tab) => {
+        const tabName = tab.id.replace("tab-", "");
+        const active = tabName === name;
+        tab.classList.toggle("active", active);
+        tab.setAttribute("aria-selected", String(active));
+      });
+      document.querySelectorAll(".tab-panel").forEach((panel) => {
+        panel.classList.toggle("active", panel.id === `panel-${name}`);
+      });
+      applyPermissionUi(document);
+    }
+    window.switchTab = switchTab;
+
+    function setSort(sortObj, field) {
+      if (sortObj.field !== field) {
+        sortObj.field = field;
+        sortObj.direction = "asc";
+      } else if (sortObj.direction === "asc") {
+        sortObj.direction = "desc";
+      } else if (sortObj.direction === "desc") {
+        sortObj.field = null;
+        sortObj.direction = null;
+      } else {
+        sortObj.direction = "asc";
+      }
+    }
+
+    function sortIcon(sortObj, field) {
+      if (sortObj.field !== field || !sortObj.direction) return "↕";
+      return sortObj.direction === "asc" ? "↑" : "↓";
+    }
+
+    async function loadAll() {
+      try {
+        const canViewOrders = hasPermission("order.view");
+        const [customersRes, productsRes, ordersRes] = await Promise.all([
+          request("/customers?page=1&pageSize=200"),
+          request("/products"),
+          canViewOrders ? request("/sales-orders?page=1&pageSize=200") : Promise.resolve({ data: [] }),
+        ]);
+        state.customers = getList(customersRes);
+        const deletedIds = getDeletedProductIds();
+        state.products = getList(productsRes).filter((p) => !deletedIds.has(String(p?.id)));
+        state.orders = getList(ordersRes);
+        renderCustomers();
+        renderProducts();
+        renderOrders();
+        applyPermissionUi(document);
+      } catch (err) {
+        showToast("error", "页面数据加载失败：" + (err?.message || "未知错误"));
+      }
+    }
+
+    function paginate(list, page, pageSize) {
+      const total = list.length;
+      const start = (page - 1) * pageSize;
+      return { total, list: list.slice(start, start + pageSize) };
+    }
+
+    function ensurePageWithin(total, pageSize, key) {
+      const maxPage = Math.max(1, Math.ceil(total / pageSize));
+      if (state[key] > maxPage) state[key] = maxPage;
+    }
+
+    function renderCustomers() {
+      const tbody = document.getElementById("customersBody");
+      const activeCustomers = state.customers.filter((c) => c?.isActive !== false);
+      const list0 = filterByField(activeCustomers, "name", state.customerFilter.name);
+      const list1 = sortBy(list0, state.customerSort.field, state.customerSort.direction);
+      ensurePageWithin(list1.length, state.pageSize, "customerPage");
+      const pageData = paginate(list1, state.customerPage, state.pageSize);
+
+      if (!pageData.list.length) {
+        tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><span class="empty-state__text">暂无数据</span></div></td></tr>';
+      } else {
+        tbody.innerHTML = pageData.list.map((c) => `
+          <tr>
+            <td>${esc(c.customerCode || c.code || "-")}</td>
+            <td>${esc(c.name || "-")}</td>
+            <td>${esc(c.contact || c.contactName || "-")}</td>
+            <td>${esc(c.phone || "-")}</td>
+            <td>${esc(c.address || "-")}</td>
+            <td>${renderBadge(c.isActive === false ? "CANCELLED" : "CONFIRMED")}</td>
+            <td data-perm-any="master.edit">
+              <button class="btn btn--icon" title="编辑" onclick="openCustomerModal('${esc(c.id)}')">✏️</button>
+              <button class="btn btn--icon" title="删除" onclick="deleteCustomer('${esc(c.id)}')">🗑️</button>
+            </td>
+          </tr>
+        `).join("");
+      }
+
+      renderPagination("customersPagination", pageData.total, state.customerPage, state.pageSize, (page, pageSize) => {
+        state.customerPage = page;
+        state.pageSize = pageSize;
+        renderCustomers();
+      });
+
+      const ths = document.querySelector("#customersTableWrap thead tr");
+      ths.innerHTML = `
+        <th class="table__th--sortable" onclick="sortCustomers('customerCode')">编码 <span class="sort-icon">${sortIcon(state.customerSort, "customerCode")}</span></th>
+        <th class="table__th--sortable" onclick="sortCustomers('name')">名称 <span class="sort-icon">${sortIcon(state.customerSort, "name")}</span></th>
+        <th>联系人</th>
+        <th>电话</th>
+        <th>地址</th>
+        <th>状态</th>
+        <th data-perm-any="master.edit">操作</th>
+      `;
+      applyPermissionUi(document);
+    }
+
+    function sortCustomers(field) {
+      setSort(state.customerSort, field);
+      renderCustomers();
+    }
+    window.sortCustomers = sortCustomers;
+
+    function applyCustomerFilter() {
+      state.customerFilter.name = document.getElementById("filterCustomerName").value.trim();
+      state.customerPage = 1;
+      renderCustomers();
+    }
+    window.applyCustomerFilter = applyCustomerFilter;
+
+    function resetCustomerFilter() {
+      document.getElementById("filterCustomerName").value = "";
+      state.customerFilter.name = "";
+      state.customerPage = 1;
+      renderCustomers();
+    }
+    window.resetCustomerFilter = resetCustomerFilter;
+
+    function renderProducts() {
+      const tbody = document.getElementById("productsBody");
+      const deletedIds = getDeletedProductIds();
+      let list = state.products.filter((p) => !deletedIds.has(String(p?.id)));
+      list = filterByField(list, "name", state.productFilter.name);
+      list = filterByField(list, "spec", state.productFilter.spec);
+      list = filterByField(list, "color", state.productFilter.color);
+      list = sortBy(list, state.productSort.field, state.productSort.direction);
+      ensurePageWithin(list.length, state.pageSize, "productPage");
+      const pageData = paginate(list, state.productPage, state.pageSize);
+
+      if (!pageData.list.length) {
+        tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><span class="empty-state__text">暂无数据</span></div></td></tr>';
+      } else {
+        tbody.innerHTML = pageData.list.map((p) => `
+          <tr>
+            <td>${esc(p.productCode || p.code || "-")}</td>
+            <td>${esc(p.name || "-")}</td>
+            <td>${esc(p.spec || "-")}</td>
+            <td>${esc(p.color || "-")}</td>
+            <td>${esc(p.baseUnitCode || p.baseUnit || p.baseUnitId || "-")}</td>
+            <td data-perm-any="master.edit">
+              <button class="btn btn--icon" title="编辑" onclick="openProductModal('${esc(p.id)}')">✏️</button>
+              <button class="btn btn--icon" title="删除" onclick="deleteProduct('${esc(p.id)}')">🗑️</button>
+            </td>
+          </tr>
+        `).join("");
+      }
+
+      renderPagination("productsPagination", pageData.total, state.productPage, state.pageSize, (page, pageSize) => {
+        state.productPage = page;
+        state.pageSize = pageSize;
+        renderProducts();
+      });
+
+      const ths = document.querySelector("#productsTableWrap thead tr");
+      ths.innerHTML = `
+        <th class="table__th--sortable" onclick="sortProducts('productCode')">编码 <span class="sort-icon">${sortIcon(state.productSort, "productCode")}</span></th>
+        <th class="table__th--sortable" onclick="sortProducts('name')">名称 <span class="sort-icon">${sortIcon(state.productSort, "name")}</span></th>
+        <th>规格</th>
+        <th>颜色</th>
+        <th>基础单位</th>
+        <th data-perm-any="master.edit">操作</th>
+      `;
+      applyPermissionUi(document);
+    }
+
+    function sortProducts(field) {
+      setSort(state.productSort, field);
+      renderProducts();
+    }
+    window.sortProducts = sortProducts;
+
+    function applyProductFilter() {
+      state.productFilter.name = document.getElementById("filterProductName").value.trim();
+      state.productFilter.spec = document.getElementById("filterProductSpec").value.trim();
+      state.productFilter.color = document.getElementById("filterProductColor").value.trim();
+      state.productPage = 1;
+      renderProducts();
+    }
+    window.applyProductFilter = applyProductFilter;
+
+    function resetProductFilter() {
+      ["filterProductName", "filterProductSpec", "filterProductColor"].forEach((id) => {
+        document.getElementById(id).value = "";
+      });
+      state.productFilter = { name: "", spec: "", color: "" };
+      state.productPage = 1;
+      renderProducts();
+    }
+    window.resetProductFilter = resetProductFilter;
+
+    function getKnownUnitOptions(extraProduct) {
+      const map = new Map();
+      [...state.products, extraProduct].filter(Boolean).forEach((product) => {
+        const id = String(product.baseUnitId || "").trim();
+        if (!id || map.has(id)) return;
+        const label = [product.baseUnitCode, product.baseUnitName, product.baseUnit]
+          .map((value) => String(value || "").trim())
+          .filter(Boolean)
+          .join(" / ") || id;
+        map.set(id, { id, label });
+      });
+      return Array.from(map.values()).sort((a, b) => a.label.localeCompare(b.label, "zh-CN"));
+    }
+
+    function renderOrders() {
+      const tbody = document.getElementById("ordersBody");
+      if (!hasPermission("order.view")) {
+        tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><span class="empty-state__text">暂无订单查阅权限</span></div></td></tr>';
+        renderPagination("ordersPagination", 0, 1, state.pageSize, () => {});
+        return;
+      }
+      let list = state.orders;
+      list = filterByField(list, "customerName", state.orderFilter.customer);
+      list = filterByField(list, "status", state.orderFilter.status);
+      list = filterByDateRange(list, "orderDate", state.orderFilter.dateFrom, state.orderFilter.dateTo);
+      list = sortBy(list, state.orderSort.field, state.orderSort.direction);
+      ensurePageWithin(list.length, state.pageSize, "orderPage");
+      const pageData = paginate(list, state.orderPage, state.pageSize);
+
+      if (!pageData.list.length) {
+        tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><span class="empty-state__text">暂无数据</span></div></td></tr>';
+      } else {
+        tbody.innerHTML = pageData.list.map((o) => {
+          const confirmBtn = (o.status === "DRAFT" && hasPermission("order.approve"))
+            ? `<button class="btn btn--icon" title="确认" data-no-row-click="1" onclick="confirmOrder('${esc(o.id)}')">✅</button>`
+            : "";
+          return `
+            <tr class="table__row--clickable" data-order-id="${esc(o.id)}" title="点击查看订单详情">
+              <td><span class="table__cell-link">${esc(o.orderNo || "-")}</span></td>
+              <td>${esc(o.customerName || "-")}</td>
+              <td>${esc(fmtDate(o.orderDate))}</td>
+              <td>${renderBadge(o.status)}</td>
+              <td>${confirmBtn}</td>
+            </tr>
+          `;
+        }).join("");
+      }
+
+      renderPagination("ordersPagination", pageData.total, state.orderPage, state.pageSize, (page, pageSize) => {
+        state.orderPage = page;
+        state.pageSize = pageSize;
+        renderOrders();
+      });
+
+      const ths = document.querySelector("#ordersTableWrap thead tr");
+      ths.innerHTML = `
+        <th class="table__th--sortable" onclick="sortOrders('orderNo')">订单号 <span class="sort-icon">${sortIcon(state.orderSort, "orderNo")}</span></th>
+        <th class="table__th--sortable" onclick="sortOrders('customerName')">客户 <span class="sort-icon">${sortIcon(state.orderSort, "customerName")}</span></th>
+        <th class="table__th--sortable" onclick="sortOrders('orderDate')">下单日期 <span class="sort-icon">${sortIcon(state.orderSort, "orderDate")}</span></th>
+        <th>状态</th>
+        <th>操作</th>
+      `;
+
+      tbody.querySelectorAll("tr[data-order-id]").forEach((row) => {
+        row.addEventListener("click", (event) => {
+          if (event.target && event.target.closest("[data-no-row-click]")) return;
+          const orderId = row.getAttribute("data-order-id");
+          if (orderId) openOrderDetail(orderId);
+        });
+      });
+    }
+
+    function _resolveProductLabel(productId) {
+      const id = String(productId || "").trim();
+      if (!id) return "-";
+      const product = state.products.find((p) => String(p.id) === id);
+      if (!product) return id;
+      const code = String(product.productCode || product.code || "").trim();
+      const name = String(product.name || "").trim();
+      if (code && name) return `${code} / ${name}`;
+      return code || name || id;
+    }
+
+    async function openOrderDetail(id) {
+      const orderId = String(id || "").trim();
+      if (!orderId) return;
+      try {
+        const res = await request(`/sales-orders/${encodeURIComponent(orderId)}`);
+        const detail = res?.data || res || {};
+        const productMap = new Map(
+          (state.products || []).map((p) => [String(p.id), p])
+        );
+        const mappedItems = (Array.isArray(detail.items) ? detail.items : []).map((item) => {
+          const product = productMap.get(String(item.productId || ""));
+          return {
+            ...item,
+            productLabel: _resolveProductLabel(item.productId),
+            unitCode: item.unitCode || product?.baseUnitCode || product?.baseUnit || item.unitId || "—",
+          };
+        });
+
+        showOrderReceiptModal(
+          { ...detail, items: mappedItems },
+          {
+            purpose: `销售货款（订单号：${detail.orderNo || orderId}）`,
+          }
+        );
+      } catch (err) {
+        showToast("error", "加载收据失败：" + (err?.message || "未知错误"));
+      }
+    }
+    window.openOrderDetail = openOrderDetail;
+
+    function sortOrders(field) {
+      setSort(state.orderSort, field);
+      renderOrders();
+    }
+    window.sortOrders = sortOrders;
+
+    function applyOrderFilter() {
+      state.orderFilter.customer = document.getElementById("filterOrderCustomer").value.trim();
+      state.orderFilter.status = document.getElementById("filterOrderStatus").value;
+      state.orderFilter.dateFrom = document.getElementById("filterOrderDateFrom").value;
+      state.orderFilter.dateTo = document.getElementById("filterOrderDateTo").value;
+      state.orderPage = 1;
+      renderOrders();
+    }
+    window.applyOrderFilter = applyOrderFilter;
+
+    function resetOrderFilter() {
+      ["filterOrderCustomer", "filterOrderStatus", "filterOrderDateFrom", "filterOrderDateTo"].forEach((id) => {
+        document.getElementById(id).value = "";
+      });
+      state.orderFilter = { customer: "", status: "", dateFrom: "", dateTo: "" };
+      state.orderPage = 1;
+      renderOrders();
+    }
+    window.resetOrderFilter = resetOrderFilter;
+
+    function openCustomerModal(id) {
+      state.editingCustomer = state.customers.find((x) => String(x.id) === String(id)) || null;
+      const c = state.editingCustomer || {};
+      showModal({
+        title: state.editingCustomer ? "编辑客户" : "新建客户",
+        body: `
+          <div class="form-grid-2">
+            <div class="form-item"><label class="form-label form-label--required">客户编码</label><input class="form-input" id="customerCode" value="${esc(c.customerCode || c.code || "")}" /><span class="form-error" id="err-customerCode"></span></div>
+            <div class="form-item"><label class="form-label form-label--required">客户名称</label><input class="form-input" id="customerName" value="${esc(c.name || "")}" /><span class="form-error" id="err-customerName"></span></div>
+            <div class="form-item"><label class="form-label">联系人</label><input class="form-input" id="customerContact" value="${esc(c.contact || c.contactName || "")}" /></div>
+            <div class="form-item"><label class="form-label">电话</label><input class="form-input" id="customerPhone" value="${esc(c.phone || "")}" /></div>
+            <div class="form-item" style="grid-column:1 / -1;"><label class="form-label">地址</label><input class="form-input" id="customerAddress" value="${esc(c.address || "")}" /></div>
+          </div>
+        `,
+        footer: `
+          <button class="btn btn--ghost btn--sm" onclick="closeModal()">取消</button>
+          <button class="btn btn--primary btn--sm" onclick="saveCustomer()">保存</button>
+        `,
+      });
+    }
+    window.openCustomerModal = openCustomerModal;
+
+    async function saveCustomer() {
+      clearFieldErrors(["customerCode", "customerName"]);
+      const customerCode = document.getElementById("customerCode").value.trim();
+      const name = document.getElementById("customerName").value.trim();
+      const payload = {
+        customerCode,
+        name,
+        contactName: document.getElementById("customerContact").value.trim(),
+        phone: document.getElementById("customerPhone").value.trim(),
+        address: document.getElementById("customerAddress").value.trim(),
+      };
+      const valid = validateRequired({ customerCode, customerName: name });
+      if (!valid.valid) {
+        if (valid.errors.customerCode) showFieldError("customerCode", "客户编码为必填项");
+        if (valid.errors.customerName) showFieldError("customerName", "客户名称为必填项");
+        return;
+      }
+      const duplicateCode = state.customers.some((x) => {
+        if (state.editingCustomer && String(x.id) === String(state.editingCustomer.id)) return false;
+        return String(x.customerCode || x.code || "").trim().toLowerCase() === customerCode.toLowerCase();
+      });
+      if (duplicateCode) {
+        showFieldError("customerCode", "客户编码已存在，请更换");
+        return;
+      }
+      try {
+        if (state.editingCustomer) {
+          await request(`/customers/${state.editingCustomer.id}`, { method: "PATCH", body: JSON.stringify(payload) });
+        } else {
+          await request("/customers", { method: "POST", body: JSON.stringify(payload) });
+        }
+        closeModal();
+        showToast("success", "客户保存成功");
+        await reloadCustomers();
+      } catch (err) {
+        const msg = err?.message || "";
+        if (String(err?.code) === "409" || msg.includes("409")) {
+          showFieldError("customerCode", "客户编码已存在");
+        } else {
+          showToast("error", "客户保存失败：" + (msg || "未知错误"));
+        }
+      }
+    }
+    window.saveCustomer = saveCustomer;
+
+    async function reloadCustomers() {
+      const res = await request("/customers?page=1&pageSize=200");
+      state.customers = getList(res);
+      renderCustomers();
+    }
+
+    function openProductModal(id) {
+      state.editingProduct = state.products.find((x) => String(x.id) === String(id)) || null;
+      const p = state.editingProduct || {};
+      const unitOptions = getKnownUnitOptions(p);
+      showModal({
+        title: state.editingProduct ? "编辑商品" : "新建商品",
+        body: `
+          <div class="form-grid-2">
+            <div class="form-item"><label class="form-label form-label--required">商品编码</label><input class="form-input" id="productCode" value="${esc(p.productCode || p.code || "")}" /><span class="form-error" id="err-productCode"></span></div>
+            <div class="form-item"><label class="form-label form-label--required">商品名称</label><input class="form-input" id="productName" value="${esc(p.name || "")}" /><span class="form-error" id="err-productName"></span></div>
+            <div class="form-item"><label class="form-label">规格</label><input class="form-input" id="productSpec" value="${esc(p.spec || "")}" /></div>
+            <div class="form-item"><label class="form-label">颜色</label><input class="form-input" id="productColor" value="${esc(p.color || "")}" /></div>
+            <div class="form-item"><label class="form-label form-label--required">基础单位</label><select class="form-select" id="productBaseUnit">${unitOptions.length ? `<option value="">请选择基础单位</option>${unitOptions.map((unit) => `<option value="${esc(unit.id)}" ${String(p.baseUnitId || "") === String(unit.id) ? "selected" : ""}>${esc(unit.label)}</option>`).join("")}` : '<option value="">暂无可选单位</option>'}</select><span class="form-error" id="err-productBaseUnit"></span></div>
+          </div>
+          ${unitOptions.length ? "" : '<div class="form-help" style="margin-top:8px;color:var(--color-danger-text);">当前没有可复用的单位数据，请先补充单位主数据后再新增商品。</div>'}
+        `,
+        footer: `
+          <button class="btn btn--ghost btn--sm" onclick="closeModal()">取消</button>
+          <button class="btn btn--primary btn--sm" onclick="saveProduct()">保存</button>
+        `,
+      });
+    }
+    window.openProductModal = openProductModal;
+
+    async function saveProduct() {
+      clearFieldErrors(["productCode", "productName", "productBaseUnit"]);
+      const productCode = document.getElementById("productCode").value.trim();
+      const name = document.getElementById("productName").value.trim();
+      const baseUnitId = document.getElementById("productBaseUnit").value.trim();
+      const payload = {
+        productCode,
+        name,
+        spec: document.getElementById("productSpec").value.trim(),
+        color: document.getElementById("productColor").value.trim(),
+        baseUnitId,
+      };
+      const valid = validateRequired({ productCode, productName: name, productBaseUnit: baseUnitId });
+      if (!valid.valid) {
+        if (valid.errors.productCode) showFieldError("productCode", "商品编码为必填项");
+        if (valid.errors.productName) showFieldError("productName", "商品名称为必填项");
+        if (valid.errors.productBaseUnit) showFieldError("productBaseUnit", "请选择基础单位");
+        return;
+      }
+      try {
+        if (state.editingProduct) {
+          await request(`/products/${state.editingProduct.id}`, { method: "PATCH", body: JSON.stringify(payload) });
+        } else {
+          await request("/products", { method: "POST", body: JSON.stringify(payload) });
+        }
+        closeModal();
+        showToast("success", "商品保存成功");
+        await reloadProducts();
+      } catch (err) {
+        const msg = err?.message || "";
+        if (String(err?.code) === "409" || msg.includes("409")) {
+          showFieldError("productCode", "商品编码已存在");
+        } else {
+          showToast("error", "商品保存失败：" + (msg || "未知错误"));
+        }
+      }
+    }
+    window.saveProduct = saveProduct;
+
+    async function deleteCustomer(id) {
+      showConfirm("确认删除该客户？", async () => {
+        try {
+          await request(`/customers/${id}`, { method: "PATCH", body: JSON.stringify({ isActive: false }) });
+          showToast("success", "客户删除成功");
+          await reloadCustomers();
+        } catch (err) {
+          showToast("error", "客户删除失败：" + (err?.message || "未知错误"));
+        }
+      });
+    }
+    window.deleteCustomer = deleteCustomer;
+
+    function deleteProduct(id) {
+      showConfirm("确认删除该商品？", () => {
+        const ids = getDeletedProductIds();
+        ids.add(String(id));
+        saveDeletedProductIds(ids);
+        state.products = state.products.filter((p) => String(p?.id) !== String(id));
+        showToast("success", "商品删除成功");
+        renderProducts();
+      });
+    }
+    window.deleteProduct = deleteProduct;
+
+    async function reloadProducts() {
+      const res = await request("/products");
+      const deletedIds = getDeletedProductIds();
+      state.products = getList(res).filter((p) => !deletedIds.has(String(p?.id)));
+      renderProducts();
+    }
+
+    function openOrderModal() {
+      const date = new Date().toISOString().slice(0, 10);
+      state.orderItems = [{ productId: "", orderedQty: 1, unitId: "", unitCode: "", unitPrice: 0 }];
+      showModal({
+        title: "新建销售订单",
+        body: `
+          <div class="form-grid-2">
+            <div class="form-item">
+              <label class="form-label form-label--required">客户</label>
+              <select class="form-select" id="orderCustomerId">
+                <option value="">请选择客户</option>
+                ${state.customers.map((c) => `<option value="${esc(c.id)}">${esc(c.name || c.customerName || "-")}</option>`).join("")}
+              </select>
+              <span class="form-error" id="err-orderCustomerId"></span>
+            </div>
+            <div class="form-item">
+              <label class="form-label form-label--required">下单日期</label>
+              <input class="form-input" id="orderDate" type="date" value="${date}" />
+              <span class="form-error" id="err-orderDate"></span>
+            </div>
+            <div class="form-item" style="grid-column:1 / -1;">
+              <label class="form-label">备注</label>
+              <input class="form-input" id="orderRemarks" />
+            </div>
+          </div>
+          <div style="margin-top:12px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+              <strong>明细行</strong>
+              <button class="btn btn--default btn--sm" onclick="addOrderItem()">添加行</button>
+            </div>
+            <span class="form-error" id="err-orderItems"></span>
+            <table class="items-table">
+              <thead><tr><th>商品</th><th>数量</th><th>单位</th><th>单价</th><th>操作</th></tr></thead>
+              <tbody id="orderItemsBody"></tbody>
+            </table>
+          </div>
+        `,
+        footer: `
+          <button class="btn btn--ghost btn--sm" onclick="closeModal()">取消</button>
+          <button class="btn btn--primary btn--sm" onclick="saveOrder()">保存</button>
+        `,
+      });
+      renderOrderItems();
+    }
+    window.openOrderModal = openOrderModal;
+
+    function addOrderItem() {
+      state.orderItems.push({ productId: "", orderedQty: 1, unitId: "", unitCode: "", unitPrice: 0 });
+      renderOrderItems();
+    }
+    window.addOrderItem = addOrderItem;
+
+    function removeOrderItem(i) {
+      state.orderItems.splice(i, 1);
+      renderOrderItems();
+    }
+    window.removeOrderItem = removeOrderItem;
+
+    function updateOrderItem(i, field, value) {
+      const item = state.orderItems[i];
+      item[field] = value;
+      if (field === "productId") {
+        const p = state.products.find((x) => String(x.id) === String(value));
+        if (p) {
+          item.unitId = p.baseUnitId || p.baseUnit || item.unitId || "";
+          item.unitCode = p.baseUnitCode || p.baseUnit || item.unitCode || "";
+        }
+      }
+      renderOrderItems();
+    }
+    window.updateOrderItem = updateOrderItem;
+
+    function renderOrderItems() {
+      const body = document.getElementById("orderItemsBody");
+      if (!body) return;
+      if (!state.orderItems.length) {
+        body.innerHTML = '<tr><td colspan="5">请添加至少一行明细</td></tr>';
+        return;
+      }
+      body.innerHTML = state.orderItems.map((it, i) => `
+        <tr>
+          <td>
+            <select class="form-select" onchange="updateOrderItem(${i}, 'productId', this.value)">
+              <option value="">请选择商品</option>
+              ${state.products.map((p) => `<option value="${esc(p.id)}" ${String(it.productId) === String(p.id) ? "selected" : ""}>${esc(formatProductOption(p))}</option>`).join("")}
+            </select>
+          </td>
+          <td><input class="form-input" type="number" min="0.01" step="0.01" value="${esc(it.orderedQty)}" onchange="updateOrderItem(${i}, 'orderedQty', Number(this.value || 0))" /></td>
+          <td><input class="form-input" value="${esc(it.unitCode || it.unitId || "")}" onchange="updateOrderItem(${i}, 'unitCode', this.value)" /></td>
+          <td><input class="form-input" type="number" min="0" step="0.01" value="${esc(it.unitPrice)}" onchange="updateOrderItem(${i}, 'unitPrice', Number(this.value || 0))" /></td>
+          <td><button class="btn btn--icon" onclick="removeOrderItem(${i})">🗑️</button></td>
+        </tr>
+      `).join("");
+    }
+
+    async function saveOrder() {
+      if (!hasPermission("order.create")) {
+        showToast("error", "你没有新增订单权限");
+        return;
+      }
+      clearFieldErrors(["orderCustomerId", "orderDate", "orderItems"]);
+      const customerId = document.getElementById("orderCustomerId").value;
+      const orderDate = document.getElementById("orderDate").value;
+      const remarks = document.getElementById("orderRemarks").value.trim();
+      const invalidItem = state.orderItems.some((x) => !x.productId || !x.orderedQty || !x.unitId);
+      if (!customerId) showFieldError("orderCustomerId", "请选择客户");
+      if (!orderDate) showFieldError("orderDate", "请选择下单日期");
+      if (!state.orderItems.length || invalidItem) showFieldError("orderItems", "请完整填写至少一行明细");
+      if (!customerId || !orderDate || !state.orderItems.length || invalidItem) return;
+
+      const payload = {
+        customerId,
+        orderDate,
+        remarks,
+        items: state.orderItems.map((x, idx) => ({
+          lineNo: idx + 1,
+          productId: x.productId,
+          orderedQty: Number(x.orderedQty),
+          unitId: x.unitId,
+          unitPrice: Number(x.unitPrice || 0),
+        })),
+      };
+
+      try {
+        await request("/sales-orders", { method: "POST", body: JSON.stringify(payload) });
+        closeModal();
+        showToast("success", "订单创建成功");
+        await reloadOrders();
+      } catch (err) {
+        showToast("error", "订单创建失败：" + (err?.message || "未知错误"));
+      }
+    }
+    window.saveOrder = saveOrder;
+
+    async function confirmOrder(id) {
+      try {
+        await request(`/sales-orders/${id}/confirm`, { method: "POST" });
+        showToast("success", "订单已确认");
+        await reloadOrders();
+      } catch (err) {
+        showToast("error", "确认失败：" + (err?.message || "未知错误"));
+      }
+    }
+    window.confirmOrder = confirmOrder;
+
+    async function reloadOrders() {
+      if (!hasPermission("order.view")) {
+        state.orders = [];
+        renderOrders();
+        return;
+      }
+      const res = await request("/sales-orders?page=1&pageSize=200");
+      state.orders = getList(res);
+      renderOrders();
+    }
+
+    loadAll();
+  </script>
+</body>
+</html>
+

@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>员工权限 - Cargo 管理系统</title>
+  <link rel="stylesheet" href="./common.css" />
+  <style>
+    .page-content .form-label { font-size:13px; font-weight:600; }
+    .page-content .form-input,
+    .page-content .form-select { height:34px; font-size:13px; padding:5px 9px; }
+    .page-content .filter-bar .btn.btn--sm { min-height:34px; font-size:13px; padding:0 9px; }
+    .page-content .table th { font-size:14px; font-weight:600; padding-top:9px; padding-bottom:9px; }
+    .page-content .table td { font-size:12px; height:42px; }
+    .page-content .badge { font-size:12px; padding:1px 6px; }
+    .page-content .pagination__total,
+    .page-content .pagination__btn,
+    .page-content .pagination__size-select { font-size:12px; min-height:30px; }
+    #modalOverlay .modal__body .form-label { font-size:13px; }
+    #modalOverlay .modal__body .form-input,
+    #modalOverlay .modal__body .form-select { height:34px; font-size:13px; }
+    #modalOverlay .modal__footer .btn.btn--sm { min-height:34px; font-size:13px; }
+    @media(max-width:1200px){
+      .page-content .form-label { font-size:11px; }
+      .page-content .form-input,
+      .page-content .form-select { height:32px; font-size:11px; }
+      .page-content .filter-bar .btn.btn--sm { min-height:32px; font-size:11px; }
+      .page-content .table th,
+      .page-content .table td { font-size:12px; }
+      .page-content .pagination__total,
+      .page-content .pagination__btn,
+      .page-content .pagination__size-select { font-size:11px; min-height:26px; }
+      #modalOverlay .modal__body .form-label { font-size:11px; }
+      #modalOverlay .modal__body .form-input,
+      #modalOverlay .modal__body .form-select { height:32px; font-size:11px; }
+      #modalOverlay .modal__footer .btn.btn--sm { min-height:32px; font-size:11px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="nav-bar" id="navbar">
+    <div class="nav-bar__left">
+      <button class="nav-bar__hamburger" id="hamburgerBtn">☰</button>
+      <a class="nav-bar__logo" href="./index.html"><span class="nav-bar__logo-text">Cargo 管理系统</span></a>
+    </div>
+    <div class="nav-bar__right">
+      <button class="nav-bar__theme-btn" id="themeBtn">🌙</button>
+      <span class="nav-bar__user"><span class="nav-bar__username" id="navUsername">未登录</span><span class="badge badge--blue nav-bar__role" id="navRole" style="display:none;"></span></span>
+      <button class="btn btn--ghost btn--sm" id="logoutBtn">退出</button>
+    </div>
+  </header>
+
+  <aside class="layout-sidebar" id="sidebar">
+    <nav class="sidebar__nav">
+      <a class="sidebar__item" href="./index.html" data-tooltip="总览仪表盘">
+        <svg class="sidebar__icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 8L8 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M8 8L11 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="8" cy="8" r="1" fill="currentColor"/></svg>
+        <span class="sidebar__label">总览仪表盘</span>
+      </a>
+      <a class="sidebar__item" href="./orders.html" data-tooltip="销售管理">
+        <svg class="sidebar__icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2 2h1.5l1.8 7.5h7l1.2-5H5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7" cy="13" r="1" fill="currentColor"/><circle cx="11" cy="13" r="1" fill="currentColor"/></svg>
+        <span class="sidebar__label">销售管理</span>
+      </a>
+      <a class="sidebar__item" href="./inventory.html" data-tooltip="库存管理">
+        <svg class="sidebar__icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="1.5" y="7" width="13" height="7.5" rx="1" stroke="currentColor" stroke-width="1.5"/><path d="M1.5 7l6.5-5.5L14.5 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="5.5" y="10" width="5" height="4.5" rx="0.5" stroke="currentColor" stroke-width="1.2"/></svg>
+        <span class="sidebar__label">库存管理</span>
+      </a>
+      <a class="sidebar__item" href="./finance.html" data-tooltip="财务管理">
+        <svg class="sidebar__icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="1.5" y="2.5" width="13" height="11" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M1.5 6h13" stroke="currentColor" stroke-width="1.5"/><path d="M5 9.5h2M9 9.5h2M5 12h2M9 12h2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        <span class="sidebar__label">财务管理</span>
+      </a>
+      <a class="sidebar__item active" href="./users.html" data-perm-any="user.manage" data-tooltip="员工权限">
+        <svg class="sidebar__icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="6" cy="5" r="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M1.5 13.5c0-2.485 2.015-4.5 4.5-4.5s4.5 2.015 4.5 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M11 7.5c1.105 0 2 .895 2 2M13 4.5c.828 0 1.5.672 1.5 1.5S13.828 7.5 13 7.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        <span class="sidebar__label">员工权限</span>
+      </a>
+    </nav>
+  </aside>
+  <div class="drawer-overlay" id="drawerOverlay"></div>
+
+  <main class="layout-main">
+    <nav class="breadcrumb"><a class="breadcrumb__item" href="./index.html">首页</a><span class="breadcrumb__sep">/</span><span class="breadcrumb__item breadcrumb__item--active">员工权限</span></nav>
+    <div class="page-content" id="usersRoot">
+      <div class="card" id="noPermissionCard" style="display:none;">
+        <div class="empty-state"><span class="empty-state__text">无访问权限</span></div>
+      </div>
+      <div id="managePanel">
+        <div class="filter-bar">
+          <div class="filter-bar__actions">
+            <button class="btn btn--primary btn--sm" onclick="openCreateUserModal()">新建员工</button>
+            <button class="btn btn--default btn--sm" onclick="loadUsersPage()">刷新</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="table">
+            <thead><tr><th>用户名</th><th>姓名</th><th>角色</th><th>权限</th><th>操作</th></tr></thead>
+            <tbody id="usersBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div class="toast-container" id="toastContainer"></div>
+  <div class="modal-overlay" id="modalOverlay" style="display:none;"><div class="modal"><div class="modal__header" id="modalHeader"></div><div class="modal__body" id="modalBody"></div><div class="modal__footer" id="modalFooter"></div></div></div>
+
+  <script src="./config.js"></script>
+  <script src="./common.js"></script>
+  <script>
+    initTheme(); initSidebar(); initNavbar(); initMobileDrawer();
+    const MANAGED_PERMISSION_CODES = ["order.edit", "order.create", "order.view", "user.manage"];
+    const PERMISSION_ALIAS = {
+      "order.edit": "修改订单",
+      "order.create": "增加订单",
+      "order.view": "查阅订单",
+      "user.manage": "向下级授权",
+    };
+    const state = { roles: [], permissions: [], users: [] };
+
+    function sortByManagedPermissionOrder(items) {
+      return [...items].sort((a, b) => {
+        const ai = MANAGED_PERMISSION_CODES.indexOf(a.code);
+        const bi = MANAGED_PERMISSION_CODES.indexOf(b.code);
+        const av = ai === -1 ? 999 : ai;
+        const bv = bi === -1 ? 999 : bi;
+        if (av === bv) return String(a.code).localeCompare(String(b.code), "zh-CN");
+        return av - bv;
+      });
+    }
+
+    function getManagedPermissionDefs() {
+      const catalog = state.permissions.filter((item) => MANAGED_PERMISSION_CODES.includes(item.code));
+      if (catalog.length) return sortByManagedPermissionOrder(catalog);
+      return MANAGED_PERMISSION_CODES.map((code) => ({
+        code,
+        name: PERMISSION_ALIAS[code] || code,
+        assignable: false,
+      }));
+    }
+
+    function renderPermissionBadges(permissionCodes) {
+      const codes = (permissionCodes || []).filter((code) => MANAGED_PERMISSION_CODES.includes(code));
+      if (!codes.length) return "-";
+      return codes
+        .map((code) => `<span class="badge badge--blue" style="margin-right:4px;margin-bottom:4px;">${_escHtml(PERMISSION_ALIAS[code] || code)}</span>`)
+        .join("");
+    }
+
+    function renderPermissionChecklist(selectedCodes, inputName) {
+      const selectedSet = new Set(selectedCodes || []);
+      const defs = getManagedPermissionDefs();
+      return defs
+        .map((item) => `
+          <label style="display:flex;align-items:center;gap:8px;margin-bottom:6px;cursor:pointer;opacity:${item.assignable ? "1" : "0.65"};">
+            <input type="checkbox" name="${_escAttr(inputName)}" value="${_escAttr(item.code)}" ${selectedSet.has(item.code) ? "checked" : ""} ${item.assignable ? "" : "disabled"} />
+            <span>${_escHtml(PERMISSION_ALIAS[item.code] || item.name || item.code)}</span>
+            ${item.assignable ? "" : '<span style="font-size:12px;color:var(--color-text-secondary);">(不可下发)</span>'}
+          </label>
+        `)
+        .join("");
+    }
+
+    function getCheckedPermissions(inputName) {
+      return Array.from(document.querySelectorAll(`input[name="${inputName}"]:checked`)).map((el) => el.value);
+    }
+
+    function renderUsers() {
+      const body = document.getElementById("usersBody");
+      if (!state.users.length) {
+        body.innerHTML = '<tr><td colspan="5"><div class="empty-state"><span class="empty-state__text">暂无数据</span></div></td></tr>';
+        return;
+      }
+      body.innerHTML = state.users
+        .map(
+          (u) => `
+        <tr>
+          <td>${_escHtml(u.username || "-")}</td>
+          <td>${_escHtml(u.fullName || "-")}</td>
+          <td>${_escHtml((u.roles || []).join(", ") || "-")}</td>
+          <td>${renderPermissionBadges(u.permissions || [])}</td>
+          <td><button class="btn btn--icon" title="编辑权限" onclick="openEditRolesModal('${_escAttr(u.id)}')">✏️</button></td>
+        </tr>`
+        )
+        .join("");
+    }
+
+    function refreshPermissionView() {
+      const allowed = hasPermission("user.manage");
+      document.getElementById("noPermissionCard").style.display = allowed ? "none" : "";
+      document.getElementById("managePanel").style.display = allowed ? "" : "none";
+      applyPermissionUi(document);
+    }
+
+    async function loadUsersPage() {
+      refreshPermissionView();
+      if (!hasPermission("user.manage")) return;
+      try {
+        const [rolesRes, usersRes] = await Promise.all([
+          request("/org/roles"),
+          request("/org/users"),
+        ]);
+        let permissionRows = [];
+        try {
+          const permissionsRes = await request("/org/permissions");
+          permissionRows = permissionsRes?.data || [];
+        } catch (_err) {
+          permissionRows = MANAGED_PERMISSION_CODES.map((code) => ({
+            code,
+            name: PERMISSION_ALIAS[code] || code,
+            assignable: hasPermission(code),
+          }));
+        }
+        state.roles = rolesRes?.data || [];
+        state.permissions = permissionRows;
+        state.users = usersRes?.data || [];
+        renderUsers();
+      } catch (err) {
+        showToast("error", "员工数据加载失败：" + (err?.message || "未知错误"));
+      }
+    }
+    window.loadUsersPage = loadUsersPage;
+
+    function openCreateUserModal() {
+      showModal({
+        title: "新建员工",
+        body: `<div class="form-item"><label class="form-label form-label--required">用户名</label><input class="form-input" id="newUserUsername"><span class="form-error" id="err-newUserUsername"></span></div>
+          <div class="form-item"><label class="form-label form-label--required">密码</label><input class="form-input" id="newUserPassword" value="staff123"><span class="form-error" id="err-newUserPassword"></span></div>
+          <div class="form-item"><label class="form-label form-label--required">姓名</label><input class="form-input" id="newUserFullName"><span class="form-error" id="err-newUserFullName"></span></div>
+          <div class="form-item"><label class="form-label form-label--required">角色</label><select class="form-select" id="newUserRole">${state.roles.map((r) => `<option value="${_escAttr(r.code)}">${_escHtml(r.code)}</option>`).join("")}</select></div>
+          <div class="form-item"><label class="form-label">权限（暂含订单与下级授权）</label>${renderPermissionChecklist([], "newUserPermission")}</div>`,
+        footer: `<button class="btn btn--ghost btn--sm" onclick="closeModal()">取消</button><button class="btn btn--primary btn--sm" onclick="saveUser()">创建</button>`,
+      });
+    }
+    window.openCreateUserModal = openCreateUserModal;
+
+    async function saveUser() {
+      clearFieldErrors(["newUserUsername", "newUserPassword", "newUserFullName"]);
+      const username = document.getElementById("newUserUsername").value.trim();
+      const password = document.getElementById("newUserPassword").value.trim();
+      const fullName = document.getElementById("newUserFullName").value.trim();
+      const role = document.getElementById("newUserRole").value;
+      const permissionCodes = getCheckedPermissions("newUserPermission");
+      if (!username) showFieldError("newUserUsername", "请输入用户名");
+      if (!password) showFieldError("newUserPassword", "请输入密码");
+      if (!fullName) showFieldError("newUserFullName", "请输入姓名");
+      if (!username || !password || !fullName) return;
+      try {
+        await request("/org/users", {
+          method: "POST",
+          body: JSON.stringify({ username, password, fullName, roleCodes: [role], permissionCodes }),
+        });
+        closeModal();
+        showToast("success", "员工创建成功");
+        await loadUsersPage();
+      } catch (err) {
+        showToast("error", "员工创建失败：" + (err?.message || "未知错误"));
+      }
+    }
+    window.saveUser = saveUser;
+
+    function openEditRolesModal(userId) {
+      const u = state.users.find((x) => String(x.id) === String(userId));
+      if (!u) return;
+      const selectedPermissions = u.directPermissions || u.permissions || [];
+      showModal({
+        title: "编辑员工权限",
+        body: `<div class="form-item"><label class="form-label">用户名</label><input class="form-input" value="${_escAttr(u.username || "-")}" disabled></div>
+          <div class="form-item"><label class="form-label form-label--required">角色</label><select class="form-select" id="editUserRole">${state.roles.map((r) => `<option value="${_escAttr(r.code)}" ${(u.roles || []).includes(r.code) ? "selected" : ""}>${_escHtml(r.code)}</option>`).join("")}</select></div>
+          <div class="form-item"><label class="form-label">权限（暂含订单与下级授权）</label>${renderPermissionChecklist(selectedPermissions, "editUserPermission")}</div>`,
+        footer: `<button class="btn btn--ghost btn--sm" onclick="closeModal()">取消</button><button class="btn btn--primary btn--sm" onclick="saveUserAuth('${_escAttr(u.id)}')">保存</button>`,
+      });
+    }
+    window.openEditRolesModal = openEditRolesModal;
+
+    async function saveUserAuth(userId) {
+      const role = document.getElementById("editUserRole").value;
+      const permissionCodes = getCheckedPermissions("editUserPermission");
+      try {
+        await request(`/org/users/${userId}/roles`, { method: "PATCH", body: JSON.stringify({ roleCodes: [role] }) });
+        await request(`/org/users/${userId}/permissions`, {
+          method: "PATCH",
+          body: JSON.stringify({ permissionCodes }),
+        });
+        closeModal();
+        showToast("success", "权限更新成功");
+        await loadUsersPage();
+      } catch (err) {
+        showToast("error", "权限更新失败：" + (err?.message || "未知错误"));
+      }
+    }
+    window.saveUserAuth = saveUserAuth;
+
+    loadUsersPage();
+  </script>
+</body>
+</html>

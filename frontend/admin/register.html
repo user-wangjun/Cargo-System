@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>统一注册 - Cargo 货物系统</title>
+  <link rel="stylesheet" href="./common.css" />
+</head>
+<body data-require-auth="false">
+  <main class="layout-main auth-shell">
+    <section class="auth-frame">
+      <aside class="auth-visual">
+        <div class="auth-visual__overlay">
+          <div class="auth-visual__stage" aria-hidden="true">
+            <div class="auth-visual__system-title">货物管理系统</div>
+            <div class="auth-globe" data-globe>
+              <canvas class="auth-globe__canvas" aria-hidden="true"></canvas>
+            </div>
+          </div>
+          <span class="auth-visual__eyebrow">企业注册</span>
+          <h1 class="auth-visual__title">货物管理系统注册</h1>
+          <p class="auth-visual__desc">根据身份填写注册信息并完成企业绑定。</p>
+        </div>
+      </aside>
+      <section class="card auth-card">
+        <div class="auth-panel auth-panel--wide">
+          <div class="auth-card__top">
+            <div class="auth-brand">
+              <span class="auth-brand__mark">C</span>
+              <div>
+                <div class="auth-brand__title">Cargo 货物系统</div>
+                <p class="auth-brand__subtitle">企业账号注册</p>
+              </div>
+            </div>
+            <nav class="auth-switch" aria-label="认证页面切换">
+              <a class="auth-switch__link" href="./login.html">登录</a>
+              <a class="auth-switch__link active" href="./register.html" aria-current="page">注册</a>
+            </nav>
+            <div>
+              <div class="auth-card__eyebrow">注册</div>
+              <h1 class="auth-heading">创建账号</h1>
+          <p class="auth-intro">请按身份填写注册信息，提交后即可创建账号。</p>
+            </div>
+          </div>
+
+          <div class="auth-form auth-form--register">
+            <div class="auth-form__grid">
+              <div class="form-item">
+                <label class="form-label form-label--required" for="roleType">注册身份</label>
+                <select class="form-select" id="roleType">
+                  <option value="EMPLOYEE" selected>员工</option>
+                  <option value="OWNER">老板</option>
+                </select>
+                <span class="form-error" id="err-roleType"></span>
+              </div>
+              <div class="form-item">
+                <label class="form-label form-label--required" for="companyName">所属/管理公司</label>
+                <input class="form-input" id="companyName" autocomplete="organization" placeholder="如：DGUT 或你的公司名" />
+                <span class="form-error" id="err-companyName"></span>
+              </div>
+            </div>
+
+            <div class="auth-form__grid">
+              <div class="form-item">
+                <label class="form-label form-label--required" for="fullName">姓名</label>
+                <input class="form-input" id="fullName" autocomplete="name" placeholder="请输入姓名" />
+                <span class="form-error" id="err-fullName"></span>
+              </div>
+              <div class="form-item">
+                <label class="form-label form-label--required" for="phone">手机号账号</label>
+                <input class="form-input" id="phone" autocomplete="username" inputmode="numeric" maxlength="11" placeholder="请输入 11 位手机号" />
+                <span class="form-error" id="err-phone"></span>
+              </div>
+            </div>
+
+            <div class="auth-form__grid">
+              <div class="form-item">
+                <label class="form-label form-label--required" for="password">登录密码</label>
+                <div class="input-with-action">
+                  <input class="form-input" id="password" type="password" placeholder="字母+数字，长度大于 6" autocomplete="new-password" />
+                  <button class="input-action" type="button" data-toggle-target="password" data-toggle-label="密码" aria-label="显示密码" aria-pressed="false">显示</button>
+                </div>
+                <span class="form-error" id="err-password"></span>
+              </div>
+              <div class="form-item">
+                <label class="form-label form-label--required" for="confirmPassword">确认密码</label>
+                <div class="input-with-action">
+                  <input class="form-input" id="confirmPassword" type="password" placeholder="请再次输入密码" autocomplete="new-password" />
+                  <button class="input-action" type="button" data-toggle-target="confirmPassword" data-toggle-label="确认密码" aria-label="显示确认密码" aria-pressed="false">显示</button>
+                </div>
+                <span class="form-error" id="err-confirmPassword"></span>
+              </div>
+            </div>
+
+            <div class="form-item" id="inviteCodeWrap">
+              <label class="form-label form-label--required" for="inviteCode" id="inviteCodeLabel">邀请码</label>
+              <div class="input-with-action">
+                <input class="form-input" id="inviteCode" type="password" placeholder="请输入邀请码" autocomplete="off" />
+                <button class="input-action" type="button" data-toggle-target="inviteCode" data-toggle-label="邀请码" aria-label="显示邀请码" aria-pressed="false">显示</button>
+              </div>
+              <span class="form-error" id="err-inviteCode"></span>
+            </div>
+
+            <button class="btn btn--primary auth-submit" id="registerBtn">提交注册</button>
+          </div>
+
+          <div class="auth-links">
+            <a href="./login.html">已有账号，去登录</a>
+          </div>
+          <p class="auth-note">规则：手机号必须 11 位；密码必须字母+数字且长度大于 6。老板和员工都通过邀请码校验，其中员工邀请码需为 6 位大写字母数字组合。</p>
+        </div>
+      </section>
+    </section>
+  </main>
+  <div class="toast-container" id="toastContainer"></div>
+  <script src="./config.js"></script>
+  <script src="./common.js"></script>
+  <script src="./globe-visual.js"></script>
+  <script type="module" src="./register.js"></script>
+</body>
+</html>
